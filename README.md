@@ -60,6 +60,10 @@ enabled should work too; reports are welcome.
   thermostat setpoints, swings, eco, curtain position, motor control, plus
   rename and room assignment.
 - Security tab for the hub's Home, Away and Sleep modes.
+- History charts (24 hours, 7 days, 30 days) for temperature, humidity, power,
+  battery and energy per hour or day, when the free
+  [ihost-bridge](https://github.com/motorosgep/ihost-bridge#history-for-butter)
+  add-on runs on the hub; the hub itself keeps history for its console only.
 - Multiple hubs, and a built-in demo home to explore without hardware.
 - Updates ship over the air, so most fixes reach you without a reinstall.
 
