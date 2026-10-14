@@ -70,4 +70,4 @@ jobs:
           MESSAGE: ${{ inputs.message || github.event.head_commit.message }}
         run: |
           first_line="$(printf '%s\n' "$MESSAGE" | head -n 1 | cut -c1-120)"
-          eas update --channel "$CHANNEL" --message "${first_line:-Update}" --non-interactive
+          eas update --channel "$CHANNEL" --environment "$CHANNEL" --message "${first_line:-Update}" --non-interactive

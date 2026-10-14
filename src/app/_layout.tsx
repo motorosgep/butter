@@ -30,7 +30,7 @@ export default function RootLayout() {
         contentStyle: { backgroundColor: c.background },
       }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'Home' }} />
       <Stack.Screen name="onboarding/index" options={{ title: 'Add a hub' }} />
       <Stack.Screen name="onboarding/pair" options={{ title: 'Pair' }} />
       <Stack.Screen name="device/[serial]" options={{ title: '' }} />
