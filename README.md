@@ -149,6 +149,11 @@ npx eas-cli@latest update --channel production --environment production --messag
 npx eas-cli@latest update --channel development --environment development --message "..."         # dev builds (Extensions tab)
 ```
 
+The Free plan allows 15 iOS and 15 Android builds a month, unlimited updates
+for up to 1,000 monthly active users and 100 GiB of bandwidth. `npm run
+eas:usage` prints this month's build count; the account's usage page on
+expo.dev has the rest.
+
 Pushes to `main` publish to the `preview` channel through
 [`.github/workflows/update.yml`](.github/workflows/update.yml) once the
 repository has an `EXPO_TOKEN` secret (expo.dev → Account settings → Access
