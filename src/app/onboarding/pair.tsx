@@ -1,7 +1,5 @@
-import * as Linking from 'expo-linking';
-import { router, useLocalSearchParams } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useRef, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Body, Button, Card, Heading, Icon, Row, Screen, Title, useColors } from '@/components/ui';
@@ -16,6 +14,14 @@ export default function Pair() {
   const [failed, setFailed] = useState<string | undefined>();
   const [done, setDone] = useState(false);
   const cancelled = useRef(false);
+  const consoleOpen = useRef(false);
+
+  // Back from the console (Done, swipe, hardware back): nothing left to dismiss.
+  useFocusEffect(
+    useCallback(() => {
+      consoleOpen.current = false;
+    }, []),
+  );
 
   useEffect(() => {
     cancelled.current = false;
@@ -24,15 +30,11 @@ export default function Pair() {
       .waitForToken(300_000, 2_000, (n) => setSeconds(n * 2))
       .then(async (token) => {
         if (cancelled.current) return;
-        // Close the in-app console if it is still up; the user is done there.
-        try {
-          WebBrowser.dismissBrowser();
-        } catch {
-          // not open, or not supported on this platform
-        }
         const info = await client.bridgeInfo().catch(() => undefined);
         await addHub({ name: name || info?.name || 'My hub', baseUrl, info }, token);
         setDone(true);
+        // Close the in-app console if it is still up; the user is done there.
+        if (consoleOpen.current) router.back();
         router.replace('/(tabs)');
       })
       .catch((error: Error) => {
@@ -45,10 +47,11 @@ export default function Pair() {
   }, [baseUrl]);
 
   // The hub only shows its Allow dialog to a console page while token requests
-  // keep arriving. Switching to Safari suspends this app and stops the polling,
-  // so the console is opened inside the app instead, where polling continues.
+  // keep arriving. A system browser tab pauses this app and stops the polling,
+  // so the console is opened in a WebView inside the app, where polling continues.
   const openConsole = () => {
-    void WebBrowser.openBrowserAsync(baseUrl, { dismissButtonStyle: 'done' }).catch(() => Linking.openURL(baseUrl));
+    consoleOpen.current = true;
+    router.push({ pathname: '/onboarding/console', params: { baseUrl } });
   };
 
   return (
