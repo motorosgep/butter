@@ -128,7 +128,19 @@ function HistorySettings({ hub, status }: { hub: Hub; status: HistoryStatus }) {
           style={[styles.input, { color: c.text, backgroundColor: c.backgroundElement }]}
         />
         <Button title="Save" variant="secondary" onPress={() => void setHistoryUrl(hub.id, draft)} />
-        <Button title="Retry" variant="secondary" icon="refresh" onPress={() => void detect()} />
+      </Row>
+      <Row style={{ marginTop: 8 }}>
+        <Button title="Check again" variant="secondary" icon="refresh" onPress={() => void detect()} />
+        {hub.historyUrl ? (
+          <Button
+            title="Use the hub's address"
+            variant="secondary"
+            onPress={() => {
+              setDraft('');
+              void setHistoryUrl(hub.id, undefined);
+            }}
+          />
+        ) : null}
       </Row>
     </Card>
   );
