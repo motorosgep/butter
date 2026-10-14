@@ -33,7 +33,6 @@
     "android": {
       "package": "dev.motorosgep.butter",
       "versionCode": 1,
-      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#3A2110",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -56,7 +55,15 @@
           "imageWidth": 160
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
