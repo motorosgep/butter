@@ -38,7 +38,9 @@ export default function Onboarding() {
       const info = await probeHub(baseUrl);
       router.push({ pathname: '/onboarding/pair', params: { baseUrl, name: name ?? info.name, deviceid: info.deviceid, fw: info.fw_version } });
     } catch (error) {
-      Alert.alert('No hub found there', error instanceof Error ? error.message : String(error));
+      const detail = error instanceof Error ? error.message : String(error);
+      const hint = /\.local(:|\/|$)/i.test(baseUrl) ? '\n\nSome phones cannot resolve .local names. Try the hub\'s IP address instead; the hub\'s console shows it under Settings.' : '';
+      Alert.alert('No hub found there', detail + hint);
     } finally {
       setProbing(false);
     }
@@ -94,7 +96,7 @@ export default function Onboarding() {
           <TextInput
             value={address}
             onChangeText={setAddress}
-            placeholder="192.168.1.20 or ihost.local"
+            placeholder="192.168.1.20"
             placeholderTextColor={c.textSecondary}
             autoCapitalize="none"
             autoCorrect={false}
