@@ -1,18 +1,39 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { Stack } from 'expo-router';
+import { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { useColors } from '@/components/ui';
+import { useHub } from '@/lib/hub/store';
 
-SplashScreen.preventAutoHideAsync();
+export default function RootLayout() {
+  const c = useColors();
+  const hydrated = useHub((s) => s.hydrated);
+  const hydrate = useHub((s) => s.hydrate);
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
+
+  if (!hydrated) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.background }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <Stack
+      screenOptions={{
+        headerTintColor: c.text,
+        headerStyle: { backgroundColor: c.background },
+        contentStyle: { backgroundColor: c.background },
+      }}>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding/index" options={{ title: 'Add a hub' }} />
+      <Stack.Screen name="onboarding/pair" options={{ title: 'Pair' }} />
+      <Stack.Screen name="device/[serial]" options={{ title: '' }} />
+    </Stack>
   );
 }

@@ -6,6 +6,7 @@
  * `sse.ts` because it differs per platform.
  */
 
+import { subscribe, type EventHandler, type StreamStatus, type Subscription } from './sse';
 import type { ApiEnvelope, BridgeInfo, Device, DeviceState, SecurityMode } from './types';
 
 export class CubeError extends Error {
@@ -142,6 +143,13 @@ export class CubeClient {
 
   async disarm(): Promise<void> {
     await this.request('PUT', '/security/disable');
+  }
+
+  // ----- events ------------------------------------------------------------------------
+
+  /** Live state changes from the gateway; see `sse.ts` / `sse.native.ts` for the transport. */
+  subscribe(onEvent: EventHandler, onStatus?: (status: StreamStatus, detail?: string) => void): Subscription {
+    return subscribe(this.sseUrl, onEvent, { fetch: this.fetchImpl, onStatus });
   }
 
   // ----- plumbing ------------------------------------------------------------------

@@ -8,9 +8,18 @@
     "scheme": "butter",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "dev.motorosgep.butter",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Butter finds and controls your home gateway on the local network.",
+        "NSBonjourServices": ["_ewelink._tcp"],
+        "NSAppTransportSecurity": { "NSAllowsLocalNetworking": true }
+      }
     },
     "android": {
+      "package": "dev.motorosgep.butter",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -32,7 +41,8 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
