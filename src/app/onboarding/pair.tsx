@@ -1,5 +1,6 @@
 import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -23,6 +24,12 @@ export default function Pair() {
       .waitForToken(300_000, 2_000, (n) => setSeconds(n * 2))
       .then(async (token) => {
         if (cancelled.current) return;
+        // Close the in-app console if it is still up; the user is done there.
+        try {
+          WebBrowser.dismissBrowser();
+        } catch {
+          // not open, or not supported on this platform
+        }
         const info = await client.bridgeInfo().catch(() => undefined);
         await addHub({ name: name || info?.name || 'My hub', baseUrl, info }, token);
         setDone(true);
@@ -37,6 +44,13 @@ export default function Pair() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseUrl]);
 
+  // The hub only shows its Allow dialog to a console page while token requests
+  // keep arriving. Switching to Safari suspends this app and stops the polling,
+  // so the console is opened inside the app instead, where polling continues.
+  const openConsole = () => {
+    void WebBrowser.openBrowserAsync(baseUrl, { dismissButtonStyle: 'done' }).catch(() => Linking.openURL(baseUrl));
+  };
+
   return (
     <Screen edges={['left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -46,10 +60,10 @@ export default function Pair() {
         </Body>
 
         <Card style={{ marginTop: 24 }}>
-          <Step n={1} title="Open the hub's web console" body="It is the page you normally use to manage the hub, on any browser on this network." />
-          <Button title="Open console" icon="open-in-new" variant="secondary" onPress={() => void Linking.openURL(baseUrl)} style={{ alignSelf: 'flex-start', marginLeft: 38, marginTop: 8 }} />
+          <Step n={1} title="Open the hub's web console" body="It opens right here in Butter. Sign in if the hub asks you to. Keep Butter open: the hub only shows the dialog while Butter is asking." />
+          <Button title="Open console" icon="open-in-new" variant="secondary" onPress={openConsole} style={{ alignSelf: 'flex-start', marginLeft: 38, marginTop: 8 }} />
           <View style={{ height: 18 }} />
-          <Step n={2} title="Press Allow" body='A dialog titled "Get eWeLink CUBE access token" appears there. Press Allow within five minutes.' />
+          <Step n={2} title="Press Allow" body='A dialog titled "Get eWeLink CUBE access token" appears there. Press Allow within five minutes; the console closes on its own once Butter is paired.' />
         </Card>
 
         <Card style={{ marginTop: 14 }}>
