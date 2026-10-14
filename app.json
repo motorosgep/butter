@@ -7,7 +7,9 @@
     "icon": "./assets/images/icon.png",
     "scheme": "butter",
     "userInterfaceStyle": "automatic",
-    "runtimeVersion": { "policy": "fingerprint" },
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
     "updates": {
       "url": "https://u.expo.dev/ed2b52c6-6e57-48b0-89ae-e6e5518e1d38",
       "checkAutomatically": "ON_LOAD",
@@ -20,8 +22,12 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocalNetworkUsageDescription": "Butter finds and controls your home gateway on the local network.",
-        "NSBonjourServices": ["_ewelink._tcp"],
-        "NSAppTransportSecurity": { "NSAllowsLocalNetworking": true }
+        "NSBonjourServices": [
+          "_ewelink._tcp"
+        ],
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
       }
     },
     "android": {
@@ -29,7 +35,7 @@
       "versionCode": 1,
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#3A2110",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -45,9 +51,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#3A2110",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 160
         }
       ],
       "expo-secure-store"
