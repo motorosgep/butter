@@ -21,6 +21,7 @@ export function useColors() {
     ok: '#1a9a4a',
     danger: '#d23b3b',
     border: scheme === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.08)',
+    gridHex: scheme === 'dark' ? '#FFFFFF' : '#000000',
   };
 }
 

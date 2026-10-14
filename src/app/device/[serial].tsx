@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { DeviceControls } from '@/components/device-controls';
+import { DeviceHistory } from '@/components/device-history';
 import { Body, Button, Card, Chip, Empty, Heading, Icon, Row, Screen, useColors } from '@/components/ui';
 import { categoryInfo, isOn, readouts, roomOf } from '@/lib/cube/capabilities';
 import { useDeviceList, useHub } from '@/lib/hub/store';
@@ -100,6 +101,8 @@ export default function DeviceScreen() {
         <View style={{ marginTop: 18 }}>
           <DeviceControls device={device} />
         </View>
+
+        <DeviceHistory device={device} />
 
         <Heading style={styles.section}>Room</Heading>
         <Row style={{ flexWrap: 'wrap' }}>

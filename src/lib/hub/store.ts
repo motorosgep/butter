@@ -13,6 +13,9 @@ import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 
+import { DemoHistory } from '../demo/history';
+import { HistoryClient, defaultHistoryUrl, probeHistory, type HistorySource } from '../history/client';
+
 import { mergeState } from '../cube/capabilities';
 import { CubeAuthError, CubeClient } from '../cube/client';
 import type { Subscription } from '../cube/sse';
@@ -26,7 +29,11 @@ export interface Hub {
   baseUrl: string;
   demo?: boolean;
   info?: BridgeInfo;
+  /** Where the history recorder lives; empty = next to the hub on port 9900. */
+  historyUrl?: string;
 }
+
+export type HistoryStatus = 'unknown' | 'checking' | 'available' | 'unavailable';
 
 export type ConnectionStatus = 'idle' | 'connecting' | 'online' | 'offline' | 'unauthorised';
 
@@ -40,6 +47,8 @@ interface HubState {
   status: ConnectionStatus;
   statusDetail?: string;
   lastError?: string;
+  history?: HistorySource;
+  historyStatus: HistoryStatus;
 
   hydrate(): Promise<void>;
   addHub(hub: Omit<Hub, 'id'>, token: string): Promise<Hub>;
@@ -53,6 +62,9 @@ interface HubState {
   setRoom(serial: string, room: string | null): Promise<void>;
   setSecurity(sid: number, enable: boolean): Promise<void>;
   disarm(): Promise<void>;
+  /** Find the history recorder for the active hub (auto or the hub's override). */
+  detectHistory(): Promise<void>;
+  setHistoryUrl(id: string, url: string | undefined): Promise<void>;
 }
 
 const HUBS_KEY = 'butter.hubs';
@@ -67,6 +79,7 @@ export const useHub = create<HubState>((set, get) => ({
   devices: {},
   security: [],
   status: 'idle',
+  historyStatus: 'unknown',
 
   async hydrate() {
     try {
@@ -146,12 +159,37 @@ export const useHub = create<HubState>((set, get) => ({
         else if (status === 'closed') set({ status: 'offline', statusDetail: detail });
       },
     );
+    void get().detectHistory();
+  },
+
+  async detectHistory() {
+    const hub = get().hubs.find((h) => h.id === get().activeHubId);
+    if (!hub) return;
+    if (hub.demo) {
+      set({ history: new DemoHistory(), historyStatus: 'available' });
+      return;
+    }
+    const url = hub.historyUrl?.trim() || defaultHistoryUrl(hub.baseUrl);
+    set({ history: undefined, historyStatus: 'checking' });
+    try {
+      await probeHistory(url);
+      if (get().activeHubId === hub.id) set({ history: new HistoryClient(url), historyStatus: 'available' });
+    } catch {
+      if (get().activeHubId === hub.id) set({ history: undefined, historyStatus: 'unavailable' });
+    }
+  },
+
+  async setHistoryUrl(id, url) {
+    const hubs = get().hubs.map((h) => (h.id === id ? { ...h, historyUrl: url?.trim() || undefined } : h));
+    await AsyncStorage.setItem(HUBS_KEY, JSON.stringify(hubs));
+    set({ hubs });
+    if (get().activeHubId === id) await get().detectHistory();
   },
 
   disconnect() {
     subscription?.close();
     subscription = undefined;
-    set({ client: undefined, status: 'idle' });
+    set({ client: undefined, status: 'idle', history: undefined, historyStatus: 'unknown' });
   },
 
   async refresh() {
