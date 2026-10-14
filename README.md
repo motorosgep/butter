@@ -39,8 +39,8 @@ gives it the phone app it deserves, without adding a cloud of its own.
 <p align="center">
   <img src="docs/screenshots/home.png" width="200" alt="Home: every device as a live tile">&nbsp;
   <img src="docs/screenshots/security.png" width="200" alt="Security modes">&nbsp;
-  <img src="docs/screenshots/pair.png" width="200" alt="Pairing with the hub">&nbsp;
-  <img src="docs/screenshots/onboarding.png" width="200" alt="Finding the hub on the network">
+  <img src="docs/screenshots/history.png" width="200" alt="History charts for power and energy">&nbsp;
+  <img src="docs/screenshots/pair.png" width="200" alt="Pairing with the hub">
 </p>
 
 ## What works today
