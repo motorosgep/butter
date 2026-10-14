@@ -2,7 +2,8 @@
  * Find gateways on the local network.
  *
  * eWeLink CUBE gateways advertise `_ewelink._tcp` over mDNS with an instance
- * name like `ihost-1002290bab`. Discovery needs a native module, so in Expo Go
+ * name like `ihost-1002290bab`, as do eWeLink Wi-Fi devices in LAN mode, so each
+ * service is probed and only gateways are listed. Discovery needs a native module, so in Expo Go
  * it degrades to "type the address" (the caller sees `available: false`).
  */
 
@@ -51,18 +52,23 @@ export async function scanForHubs(durationMs = 6_000, onFound?: (hub: FoundHub) 
   const zeroconf = new Zeroconf();
   const found = new Map<string, FoundHub>();
 
+  const probed = new Set<string>();
+
   zeroconf.on('resolved', (service) => {
     const address = service.ipv4?.[0] ?? service.addresses?.find((a) => a.includes('.'));
-    if (!address || found.has(service.name)) return;
+    if (!address || probed.has(service.name)) return;
+    probed.add(service.name);
     const hub: FoundHub = { name: service.name, host: service.host, address, baseUrl: `http://${address}` };
-    found.set(service.name, hub);
+    // Plain eWeLink Wi-Fi devices in LAN mode advertise the same service type as
+    // the gateway. Only a gateway answers the bridge endpoint, so list those.
     void new CubeClient({ baseUrl: hub.baseUrl, timeoutMs: 4_000 })
       .bridgeInfo()
       .then((info) => {
         hub.info = info;
+        found.set(service.name, hub);
         onFound?.(hub);
       })
-      .catch(() => onFound?.(hub));
+      .catch(() => undefined);
   });
   zeroconf.on('error', () => {
     /* keep scanning; a resolve timeout for one service is not fatal */

@@ -6,14 +6,14 @@ import { StatusBanner } from '@/components/status-banner';
 import { Body, Empty, Heading, Screen, Title, useColors } from '@/components/ui';
 import { roomOf } from '@/lib/cube/capabilities';
 import type { Device } from '@/lib/cube/types';
-import { selectActiveHub, selectDeviceList, useHub } from '@/lib/hub/store';
+import { selectActiveHub, useDeviceList, useHub } from '@/lib/hub/store';
 
 const UNASSIGNED = 'Unassigned';
 
 export default function Home() {
   const c = useColors();
   const hub = useHub(selectActiveHub);
-  const devices = useHub(selectDeviceList);
+  const devices = useDeviceList();
   const refresh = useHub((s) => s.refresh);
   const status = useHub((s) => s.status);
   const [refreshing, setRefreshing] = useState(false);

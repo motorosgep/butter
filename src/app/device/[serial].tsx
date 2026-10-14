@@ -5,13 +5,13 @@ import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { DeviceControls } from '@/components/device-controls';
 import { Body, Button, Card, Chip, Empty, Heading, Icon, Row, Screen, useColors } from '@/components/ui';
 import { categoryInfo, isOn, readouts, roomOf } from '@/lib/cube/capabilities';
-import { selectDeviceList, useHub } from '@/lib/hub/store';
+import { useDeviceList, useHub } from '@/lib/hub/store';
 
 export default function DeviceScreen() {
   const c = useColors();
   const { serial } = useLocalSearchParams<{ serial: string }>();
   const device = useHub((s) => s.devices[serial]);
-  const all = useHub(selectDeviceList);
+  const all = useDeviceList();
   const rename = useHub((s) => s.rename);
   const setRoom = useHub((s) => s.setRoom);
   const [editingName, setEditingName] = useState(false);
