@@ -11,6 +11,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 
 import { mergeState } from '../cube/capabilities';
 import { CubeAuthError, CubeClient } from '../cube/client';
@@ -249,4 +250,10 @@ function message(error: unknown): string {
 
 export const selectActiveHub = (s: HubState): Hub | undefined => s.hubs.find((h) => h.id === s.activeHubId);
 export const selectDeviceList = (s: HubState): Device[] => Object.values(s.devices);
+/**
+ * Devices as an array. `Object.values` makes a fresh array on every call, which
+ * zustand's snapshot comparison would treat as a change on every render, so the
+ * array is compared element by element.
+ */
+export const useDeviceList = (): Device[] => useHub(useShallow(selectDeviceList));
 export const isDemoUrl = (url: string): boolean => url === DEMO_BASE_URL;
