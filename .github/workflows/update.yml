@@ -1,0 +1,73 @@
+# Publishes JavaScript/asset changes over the air with EAS Update.
+# Needs an EXPO_TOKEN repository secret (expo.dev > Account settings > Access tokens).
+# Without it the job skips, so forks and docs-only pushes stay green.
+name: OTA update
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - 'scripts/**'
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Update channel
+        default: preview
+        type: choice
+        options: [development, preview, production]
+      message:
+        description: Update message
+        default: Manual update
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ota-${{ inputs.channel || 'preview' }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for EXPO_TOKEN
+        id: token
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::notice::EXPO_TOKEN secret is not set; skipping the update"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.present == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.token.outputs.present == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: expo/expo-github-action@v8
+        if: steps.token.outputs.present == 'true'
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+        if: steps.token.outputs.present == 'true'
+
+      - name: Publish update
+        if: steps.token.outputs.present == 'true'
+        env:
+          CHANNEL: ${{ inputs.channel || 'preview' }}
+          MESSAGE: ${{ inputs.message || github.event.head_commit.message }}
+        run: |
+          first_line="$(printf '%s\n' "$MESSAGE" | head -n 1 | cut -c1-120)"
+          eas update --channel "$CHANNEL" --message "${first_line:-Update}" --non-interactive
