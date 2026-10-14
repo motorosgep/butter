@@ -121,14 +121,24 @@ npx tsc --noEmit              # typecheck
 npx expo lint                 # lint
 ```
 
-Native modules (mDNS discovery, secure storage) need a development build.
-SDK 57 requires Xcode 26.4 or newer for local iOS builds; without it, build in
-the cloud:
+Native modules (mDNS discovery, secure storage, the in-app console) need a
+development build. Android builds run locally with Android Studio's SDK and a
+JDK 17, using the same profiles as the cloud and costing no EAS quota:
+
+```bash
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1536m"   # the default metaspace is too small
+npx eas-cli@latest build --platform android --profile preview --local --output butter.apk      # install on a phone
+npx eas-cli@latest build --platform android --profile development --local --output dev.apk     # dev client
+```
+
+SDK 57 requires Xcode 26.4 or newer for local iOS builds; without it, iOS goes
+through the cloud. Batch native changes, since the Free plan allows 15 builds
+per platform a month:
 
 ```bash
 npx eas-cli@latest build --platform ios --profile development-simulator   # iOS Simulator
 npx eas-cli@latest build --platform ios --profile development             # iPhone
-npx eas-cli@latest build --platform android --profile development         # Android APK
 ```
 
 `scripts/spike.ts` exercises the API client against a real hub from Node and
