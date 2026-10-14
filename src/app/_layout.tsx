@@ -33,6 +33,7 @@ export default function RootLayout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'Home' }} />
       <Stack.Screen name="onboarding/index" options={{ title: 'Add a hub' }} />
       <Stack.Screen name="onboarding/pair" options={{ title: 'Pair' }} />
+      <Stack.Screen name="onboarding/console" options={{ title: 'Hub console', presentation: 'modal' }} />
       <Stack.Screen name="device/[serial]" options={{ title: '' }} />
     </Stack>
   );
