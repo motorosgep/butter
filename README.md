@@ -1,32 +1,70 @@
-# Butter
+<p align="center">
+  <img src="docs/banner.png" alt="Butter: I can't believe it's not an iHost app" width="100%">
+</p>
 
-*I can't believe it's not an iHost app.*
+<p align="center">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-F2B544?labelColor=3A2110"></a>
+  <img alt="Expo SDK 57" src="https://img.shields.io/badge/Expo-SDK%2057-F2B544?labelColor=3A2110&logo=expo&logoColor=white">
+  <img alt="iOS and Android" src="https://img.shields.io/badge/platforms-iOS%20%C2%B7%20Android-F2B544?labelColor=3A2110">
+  <img alt="Updates over the air" src="https://img.shields.io/badge/updates-over%20the%20air-F2B544?labelColor=3A2110">
+  <a href="https://github.com/motorosgep/butter/actions/workflows/update.yml"><img alt="OTA update workflow" src="https://github.com/motorosgep/butter/actions/workflows/update.yml/badge.svg"></a>
+</p>
 
-Butter is an open-source phone app for homes that run on a local eWeLink CUBE
-gateway, such as the SONOFF iHost. The gateway keeps everything local by design,
-and in exchange it never got a companion app: control happens through a web
-console or a tablet dashboard. Butter gives it the phone app it deserves,
-without adding a cloud of its own.
+**Butter** is an open-source phone app for homes that run on a local
+[eWeLink CUBE](https://ewelink.cc/ewelink-cube/) gateway, such as the
+[SONOFF iHost](https://sonoff.tech/product/smart-home-hub/ihost/). The gateway
+keeps everything on your network by design, and in exchange it never got a
+companion app: control happens through a web console or a wall tablet. Butter
+gives it the phone app it deserves, without adding a cloud of its own.
 
-- **Direct to the hub.** Butter talks to the gateway's own Open API over your
-  network. No account, no server in the middle, nothing leaves your LAN unless you
-  choose a VPN for remote use.
+## Why Butter
+
+- **Talks straight to the hub.** Butter uses the gateway's own Open API over
+  your network. No account, no server in the middle, nothing leaves your LAN
+  unless you bring your own VPN for remote use.
 - **Every device, every capability.** Tiles are generated from what the hub
   reports, so switches, plugs, lights, curtains, sensors, thermostats, air
-  conditioners and third-party add-on devices all get a sensible card, including
-  the ones vendor ecosystems leave out.
+  conditioners and devices from third-party add-ons all get a sensible card,
+  including the ones vendor ecosystems leave out.
 - **Live.** The hub streams state changes; tiles update the instant something
-  happens.
+  happens, whoever caused it.
 - **Honest about the hub's limits.** The Open API has no rooms or scenes yet.
-  Butter keeps room assignments on the hub using device tags, and offers app-side
-  scenes until the API grows.
+  Butter keeps room assignments on the hub as device tags, so they follow you
+  to every phone, and will offer app-side scenes until the API grows.
+- **Opinionated only about staying out of the way.** No bloat, no upsell, no
+  forced ecosystem. It is a remote control for your house.
 
-Butter is not affiliated with SONOFF, ITEAD or CoolKit. iHost and eWeLink are
-their trademarks; Butter just works with their gateway.
+## Screenshots
 
-## Status
+<p align="center">
+  <img src="docs/screenshots/home.png" width="200" alt="Home: every device as a live tile">&nbsp;
+  <img src="docs/screenshots/security.png" width="200" alt="Security modes">&nbsp;
+  <img src="docs/screenshots/pair.png" width="200" alt="Pairing with the hub">&nbsp;
+  <img src="docs/screenshots/onboarding.png" width="200" alt="Finding the hub on the network">
+</p>
 
-Early development. Nothing to install yet. Follow the roadmap below.
+## What works today
+
+Butter is in early development, built and tested against a SONOFF iHost running
+eWeLink CUBE 2.9. Other gateways that run eWeLink CUBE with the Open API
+enabled should work too; reports are welcome.
+
+- Finds the hub on the network (mDNS) or takes an address, including a VPN or
+  remote-access URL.
+- One-time pairing: press **Allow** on the hub's console and the token lives in
+  the phone's secure keychain from then on.
+- Home tab with a tile per device: power, readouts (temperature, humidity,
+  power draw, signal, battery) and online state, grouped by room.
+- Device page with every control the hub exposes: power, multi-channel
+  toggles, brightness, colour temperature, modes (fan speed, AC mode and more),
+  thermostat setpoints, swings, eco, curtain position, motor control, plus
+  rename and room assignment.
+- Security tab for the hub's Home, Away and Sleep modes.
+- Multiple hubs, and a built-in demo home to explore without hardware.
+- Updates ship over the air, so most fixes reach you without a reinstall.
+
+Not yet: scenes, favourites, widgets, notifications, a store listing. See the
+roadmap.
 
 ## How it works
 
@@ -36,47 +74,36 @@ phone ──LAN (or VPN)──▶ gateway Open API v2   GET /open-api/v2/rest/de
                         event stream           GET /open-api/v2/sse/bridge
 ```
 
-1. **Pairing.** Butter finds the gateway on the network (it advertises itself over
-   mDNS) or you type its address. It asks the gateway for an access token; you
-   press **Allow** once on the gateway's web console. The token is stored in the
-   phone's secure keychain.
+1. **Pairing.** Butter finds the gateway (it advertises itself over mDNS) or
+   you type its address. It asks the gateway for an access token and opens the
+   hub's console inside the app; you press **Allow** once. The token is stored
+   in the phone's secure keychain.
 2. **Devices.** The device list, with categories and capabilities, becomes the
-   tile grid. Rooms come from a `room` tag Butter writes on each device, so they
-   sync across phones and survive reinstalls.
+   tile grid. Rooms come from a `room` tag Butter writes on each device.
 3. **Control and updates.** Commands go straight to the hub; state changes come
    back over the server-sent event stream.
-4. **Remote use.** Any route that reaches the hub works: Tailscale, your own VPN,
-   or CUBE's remote access link. Butter just needs a base URL.
+4. **Remote use.** Any route that reaches the hub works: Tailscale, your own
+   VPN, or CUBE's remote access link. Butter just needs a base URL.
 
-## What the spike established
+The details of what the Open API does and does not offer are in
+[docs/open-api-notes.md](docs/open-api-notes.md).
 
-`scripts/spike.ts` talks to a real iHost (eWeLink CUBE 2.9.0) with the same
-client the app will use (`src/lib/cube/`). Confirmed:
+## Try it
 
-- The token handshake is one `GET /bridge/access_token?app_name=Butter` poll
-  loop; the gateway shows an Allow dialog with the app name and returns a
-  long-lived token.
-- `GET /devices` returns every device with category, capabilities (including
-  per-capability settings such as ranges and supported modes), full state with
-  an `updated_at` timestamp per attribute, custom tags and online flag. Devices
-  from third-party add-ons are included.
-- Security modes come back as `{sid, name, enable}` with `home_mode`,
-  `away_mode` and `sleep_mode`.
-- The event stream at `/open-api/v2/sse/bridge?access_token=…` delivers
-  `device#v2#updateDeviceState` events (serial plus a state fragment) within a
-  second of a change, and keep-alive messages in between.
+There is no store listing yet. Until there is, build it yourself; it takes a
+free [Expo](https://expo.dev) account and about fifteen minutes of waiting.
 
-## Roadmap
+```bash
+git clone https://github.com/motorosgep/butter.git
+cd butter
+npm install
+npx eas-cli@latest login
+npx eas-cli@latest build --platform ios --profile preview        # or: --platform android
+```
 
-1. **Spike.** Done; see above. Still to check: the Open API through CUBE's remote
-   link.
-2. **MVP.** Onboarding, device tiles for the common capabilities, control, live
-   updates, security modes, settings, multiple hubs, demo mode. TestFlight and
-   Play internal testing.
-3. **Rooms, favourites, scenes.** Rooms via tags; app-side scenes; local
-   notifications while the app is open.
-4. **Platform polish.** Widgets, Siri Shortcuts, tablet layout, translations.
-5. **Assistant.** Ask the house questions and give it instructions in plain language.
+Install the build EAS hands you (iOS needs your device registered with EAS
+first, Android is a plain APK), open Butter, and follow the pairing steps.
+Simulator builds use the `preview-simulator` profile.
 
 ## Development
 
@@ -85,22 +112,25 @@ registry in `.npmrc`.
 
 ```bash
 npm install
-npx expo start          # Expo Go / web
-npx tsc --noEmit        # typecheck
-npx expo lint           # lint
+npx expo start --dev-client   # Metro for a development build
+npx tsc --noEmit              # typecheck
+npx expo lint                 # lint
 ```
 
-Native modules (mDNS discovery, secure storage) need a development build. SDK 57
-requires Xcode 26.4 or newer for local iOS builds; without it, build in the cloud:
+Native modules (mDNS discovery, secure storage) need a development build.
+SDK 57 requires Xcode 26.4 or newer for local iOS builds; without it, build in
+the cloud:
 
 ```bash
 npx eas-cli@latest build --platform ios --profile development-simulator   # iOS Simulator
 npx eas-cli@latest build --platform ios --profile development             # iPhone
 npx eas-cli@latest build --platform android --profile development         # Android APK
-npx expo start --dev-client                                               # then connect the app
 ```
 
-### Over-the-air updates
+`scripts/spike.ts` exercises the API client against a real hub from Node and
+is the quickest way to poke at the Open API.
+
+### Shipping
 
 JavaScript and asset changes ship with EAS Update, so most releases need no new
 binary and no store review. Each build profile has an update channel of the same
@@ -121,6 +151,26 @@ repository has an `EXPO_TOKEN` secret (expo.dev → Account settings → Access
 tokens). Release builds fetch the update in the background and apply it on the
 next launch.
 
+## Roadmap
+
+1. **MVP.** Onboarding, device tiles, controls, live updates, security modes,
+   settings, multiple hubs, demo mode. Done. TestFlight and Play internal
+   testing next.
+2. **Rooms, favourites, scenes.** Rooms via tags, app-side scenes, local
+   notifications while the app is open.
+3. **Platform polish.** Widgets, Siri Shortcuts, tablet layout, translations.
+4. **Assistant.** Ask the house questions and give it instructions in plain
+   language.
+
+## Contributing
+
+Issues and pull requests are welcome, especially reports from other gateways
+and device types. Run `npx tsc --noEmit` and `npx expo lint` before opening a
+pull request.
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
+
+Butter is not affiliated with SONOFF, ITEAD or CoolKit. iHost, eWeLink and
+eWeLink CUBE are their trademarks; Butter just works with their gateway.
