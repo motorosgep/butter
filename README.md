@@ -100,6 +100,27 @@ npx eas-cli@latest build --platform android --profile development         # Andr
 npx expo start --dev-client                                               # then connect the app
 ```
 
+### Over-the-air updates
+
+JavaScript and asset changes ship with EAS Update, so most releases need no new
+binary and no store review. Each build profile has an update channel of the same
+name (`development`, `preview`, `production`), and the runtime version is a
+fingerprint of the native project. An update can only reach builds whose native
+code matches, so a changed native dependency or config means one more
+`eas build`; everything else is an update.
+
+```bash
+npx eas-cli@latest update --channel development --message "What changed"   # dev builds (Extensions tab)
+npx eas-cli@latest update --channel preview --message "What changed"       # testers
+npx eas-cli@latest update --channel production --message "What changed"    # store builds
+```
+
+Pushes to `main` publish to the `preview` channel through
+[`.github/workflows/update.yml`](.github/workflows/update.yml) once the
+repository has an `EXPO_TOKEN` secret (expo.dev → Account settings → Access
+tokens). Release builds fetch the update in the background and apply it on the
+next launch.
+
 ## License
 
 MIT, see [LICENSE](LICENSE).

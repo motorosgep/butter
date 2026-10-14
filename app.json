@@ -7,6 +7,12 @@
     "icon": "./assets/images/icon.png",
     "scheme": "butter",
     "userInterfaceStyle": "automatic",
+    "runtimeVersion": { "policy": "fingerprint" },
+    "updates": {
+      "url": "https://u.expo.dev/ed2b52c6-6e57-48b0-89ae-e6e5518e1d38",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "ios": {
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "dev.motorosgep.butter",
