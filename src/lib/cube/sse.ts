@@ -56,15 +56,23 @@ export interface Subscription {
   close(): void;
 }
 
+export type StreamStatus = 'connecting' | 'open' | 'closed';
+
+export interface SubscribeOptions {
+  fetch?: typeof fetch;
+  onStatus?: (status: StreamStatus, detail?: string) => void;
+}
+
+/** Platform entry point: Metro picks `sse.native.ts` on iOS/Android, this file on web and Node. */
+export function subscribe(url: string, onEvent: EventHandler, options: SubscribeOptions = {}): Subscription {
+  return subscribeWithFetch(url, onEvent, options);
+}
+
 /**
  * Subscribe with a streaming `fetch` (web / Node). Reconnects with backoff
  * until closed. `onStatus` reports connection changes for the UI.
  */
-export function subscribeWithFetch(
-  url: string,
-  onEvent: EventHandler,
-  options: { fetch?: typeof fetch; onStatus?: (status: 'connecting' | 'open' | 'closed', detail?: string) => void } = {},
-): Subscription {
+export function subscribeWithFetch(url: string, onEvent: EventHandler, options: SubscribeOptions = {}): Subscription {
   const fetchImpl = options.fetch ?? fetch;
   let closed = false;
   let controller: AbortController | undefined;
