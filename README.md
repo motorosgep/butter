@@ -110,9 +110,9 @@ code matches, so a changed native dependency or config means one more
 `eas build`; everything else is an update.
 
 ```bash
-npx eas-cli@latest update --channel development --message "What changed"   # dev builds (Extensions tab)
-npx eas-cli@latest update --channel preview --message "What changed"       # testers
-npx eas-cli@latest update --channel production --message "What changed"    # store builds
+npx eas-cli@latest update --channel preview --environment preview --message "What changed"        # testers
+npx eas-cli@latest update --channel production --environment production --message "What changed"  # store builds
+npx eas-cli@latest update --channel development --environment development --message "..."         # dev builds (Extensions tab)
 ```
 
 Pushes to `main` publish to the `preview` channel through
