@@ -90,8 +90,15 @@ npx tsc --noEmit        # typecheck
 npx expo lint           # lint
 ```
 
-Native modules (mDNS discovery, secure storage) need a development build:
-`npx eas-cli@latest build --profile development`.
+Native modules (mDNS discovery, secure storage) need a development build. SDK 57
+requires Xcode 26.4 or newer for local iOS builds; without it, build in the cloud:
+
+```bash
+npx eas-cli@latest build --platform ios --profile development-simulator   # iOS Simulator
+npx eas-cli@latest build --platform ios --profile development             # iPhone
+npx eas-cli@latest build --platform android --profile development         # Android APK
+npx expo start --dev-client                                               # then connect the app
+```
 
 ## License
 
