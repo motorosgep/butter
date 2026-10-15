@@ -211,6 +211,12 @@ function ControlBody({ device, accent, wide, c }: { device: Device; accent: Acce
               <Text style={[styles.hero, { fontSize: 28, color: currentColor }]}>{climate.current}</Text>
               {climate.target ? <Text style={[styles.heroSmall, { color: subColor }]}>{climate.target}</Text> : null}
             </View>
+          ) : climate?.target ? (
+            // No room reading (a heat pump zone, say): the target is the number that matters.
+            <View style={styles.heroRow}>
+              <Text style={[styles.hero, { fontSize: 28, color: c.text }]}>{climate.target.replace('→ ', '')}</Text>
+              <Text style={[styles.heroSmall, { color: subColor }]}>target</Text>
+            </View>
           ) : null}
           <Body numberOfLines={1} style={[styles.summary, { color: subColor }]}>
             {climate ? climateDetail(device) : summary(device)}
@@ -243,6 +249,7 @@ function climateDetail(device: Device): string {
     if (fan) parts.push(`Fan ${String(fan)}`);
   }
   for (const r of readouts(device)) if (r.key !== 'temperature' && r.key !== 'rssi' && r.key !== 'lqi') parts.push(r.value);
+  if (!parts.length) parts.push(isOn(device) ? 'On' : summary(device));
   return parts.join(' · ');
 }
 
