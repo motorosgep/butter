@@ -78,9 +78,10 @@ export function Slider({
       onResponderTerminate={() => setDragging(undefined)}
       accessibilityRole="adjustable"
       accessibilityValue={{ min, max, now: shown }}>
-      <View style={[styles.track, { backgroundColor: c.backgroundSelected }]} />
-      <View style={[styles.track, styles.fill, { backgroundColor: c.accent, width: x + THUMB / 2 }]} />
-      <View style={[styles.thumb, { left: x, backgroundColor: dragging !== undefined ? c.accent : '#FFFFFF', borderColor: c.accent }]} />
+      {/* children never take the touch, so locationX stays relative to the whole track */}
+      <View pointerEvents="none" style={[styles.track, { backgroundColor: c.backgroundSelected }]} />
+      <View pointerEvents="none" style={[styles.track, styles.fill, { backgroundColor: c.accent, width: x + THUMB / 2 }]} />
+      <View pointerEvents="none" style={[styles.thumb, { left: x, backgroundColor: dragging !== undefined ? c.accent : '#FFFFFF', borderColor: c.accent }]} />
     </View>
   );
 }
