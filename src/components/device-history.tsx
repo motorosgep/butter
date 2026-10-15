@@ -108,13 +108,17 @@ export function DeviceHistory({ device }: { device: Device }) {
   const [error, setError] = useState<string | undefined>();
 
   const chartable = useMemo(() => {
+    // Only chart readings the device actually reports; the recorder may hold
+    // metrics from a capability the device no longer has.
+    const caps = new Set(device.capabilities.map((x) => x.capability));
     const out: Series[] = [];
     for (const m of metrics ?? []) {
+      if (!caps.has(m.metric.split('.')[0])) continue;
       const s = seriesFor(m.metric, c);
       if (s && !out.some((x) => x.title === s.title) && m.count > 1) out.push(s);
     }
     return out.sort((a, b) => a.order - b.order);
-  }, [metrics, c]);
+  }, [metrics, c, device.capabilities]);
   const energy = metrics !== undefined && hasEnergy(device, metrics);
   const sensorLike = device.capabilities.some((x) => ['temperature', 'humidity', 'electric-power', 'power-consumption', 'battery'].includes(x.capability));
 
