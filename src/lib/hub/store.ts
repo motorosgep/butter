@@ -15,6 +15,7 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { DemoHistory } from '../demo/history';
 import { HistoryClient, defaultHistoryUrl, probeHistory, type HistorySource } from '../history/client';
+import { discoveryAvailable, probeHub, scanForHubs } from './discovery';
 
 import { mergeState } from '../cube/capabilities';
 import { CubeAuthError, CubeClient } from '../cube/client';
@@ -65,6 +66,10 @@ interface HubState {
   /** Find the history recorder for the active hub (auto or the hub's override). */
   detectHistory(): Promise<void>;
   setHistoryUrl(id: string, url: string | undefined): Promise<void>;
+  /** Point a hub at a new address (after a router change) and reconnect. */
+  setHubAddress(id: string, baseUrl: string): Promise<void>;
+  /** Look for the active hub on the network by its device id and adopt its new address. */
+  relocateHub(): Promise<boolean>;
 }
 
 const HUBS_KEY = 'butter.hubs';
@@ -149,7 +154,14 @@ export const useHub = create<HubState>((set, get) => ({
     try {
       await get().refresh();
     } catch (error) {
-      set({ status: error instanceof CubeAuthError ? 'unauthorised' : 'offline', statusDetail: message(error) });
+      if (error instanceof CubeAuthError) {
+        set({ status: 'unauthorised', statusDetail: message(error) });
+        return;
+      }
+      set({ status: 'offline', statusDetail: `${message(error)}. Looking for the hub on the network…` });
+      // Routers hand out new addresses; the hub keeps its device id, so follow it.
+      if (await get().relocateHub()) return;
+      set({ status: 'offline', statusDetail: message(error) });
       return;
     }
     subscription = client.subscribe(
@@ -177,6 +189,28 @@ export const useHub = create<HubState>((set, get) => ({
     } catch {
       if (get().activeHubId === hub.id) set({ history: undefined, historyStatus: 'unavailable' });
     }
+  },
+
+  async setHubAddress(id, baseUrl) {
+    const info = await probeHub(baseUrl);
+    const hubs = get().hubs.map((h) => (h.id === id ? { ...h, baseUrl, info } : h));
+    await AsyncStorage.setItem(HUBS_KEY, JSON.stringify(hubs));
+    set({ hubs });
+    if (get().activeHubId === id) await get().connect();
+  },
+
+  async relocateHub() {
+    const hub = get().hubs.find((h) => h.id === get().activeHubId);
+    const deviceid = hub?.info?.deviceid;
+    if (!hub || hub.demo || !deviceid || !discoveryAvailable()) return false;
+    const found = await scanForHubs(5_000).catch(() => []);
+    const match = found.find((f) => f.info?.deviceid === deviceid && f.baseUrl !== hub.baseUrl);
+    if (!match) return false;
+    const hubs = get().hubs.map((h) => (h.id === hub.id ? { ...h, baseUrl: match.baseUrl, info: match.info ?? h.info } : h));
+    await AsyncStorage.setItem(HUBS_KEY, JSON.stringify(hubs));
+    set({ hubs });
+    await get().connect();
+    return get().status !== 'offline';
   },
 
   async setHistoryUrl(id, url) {
