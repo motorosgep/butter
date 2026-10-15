@@ -24,7 +24,7 @@ export const DEMO_DEVICES: Device[] = [
       brightness: { brightness: 70, updated_at: ts() },
       'color-temperature': { colorTemperature: 40, updated_at: ts() },
     },
-    tags: { room: 'Living room' },
+    tags: { room: 'Living room', pinned: '1760000200' },
   }),
   dev({
     serial_number: 'demo-plug-kitchen',
@@ -74,7 +74,7 @@ export const DEMO_DEVICES: Device[] = [
       humidity: { humidity: 48, updated_at: ts() },
       battery: { battery: 92, updated_at: ts() },
     },
-    tags: { room: 'Bedroom' },
+    tags: { room: 'Bedroom', pinned: '1760000100' },
   }),
   dev({
     serial_number: 'demo-door-front',

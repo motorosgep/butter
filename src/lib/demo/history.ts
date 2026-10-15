@@ -26,8 +26,9 @@ export class DemoHistory implements HistorySource {
     const step = Math.max(resolution, 300);
     const points = [];
     for (let t = Math.ceil(from / step) * step; t <= to; t += step) {
+      const outdoors = /outdoor/.test(serial);
       const v = metric.startsWith('temperature')
-        ? wave(t, 21.5, 2.2, 86400, seed)
+        ? wave(t, outdoors ? 10 : 21.5, outdoors ? 4 : 2.2, 86400, seed)
         : metric.startsWith('humidity')
           ? wave(t, 48, 9, 86400 * 1.3, seed + 1)
           : Math.max(0, wave(t, 60000, 70000, 86400, seed + 2));

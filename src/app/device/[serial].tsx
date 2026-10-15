@@ -1,10 +1,11 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { DeviceControls } from '@/components/device-controls';
 import { DeviceHistory } from '@/components/device-history';
 import { Body, Button, Card, Chip, Empty, Heading, Icon, Row, Screen, useColors } from '@/components/ui';
+import { isPinned } from '@/lib/cube/appearance';
 import { categoryInfo, isOn, readouts, roomOf } from '@/lib/cube/capabilities';
 import { useDeviceList, useHub } from '@/lib/hub/store';
 
@@ -15,6 +16,7 @@ export default function DeviceScreen() {
   const all = useDeviceList();
   const rename = useHub((s) => s.rename);
   const setRoom = useHub((s) => s.setRoom);
+  const setPinned = useHub((s) => s.setPinned);
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState('');
   const [newRoom, setNewRoom] = useState('');
@@ -34,6 +36,11 @@ export default function DeviceScreen() {
   const room = roomOf(device);
   const on = isOn(device);
   const values = readouts(device);
+  const pinned = isPinned(device);
+
+  const togglePin = async () => {
+    await setPinned(device.serial_number, !pinned).catch((e: Error) => Alert.alert('Could not update Favourites', e.message));
+  };
 
   const saveName = async () => {
     const name = draftName.trim();
@@ -88,14 +95,25 @@ export default function DeviceScreen() {
             </Body>
           </View>
           {!editingName ? (
-            <Button
-              title="Rename"
-              variant="secondary"
-              onPress={() => {
-                setDraftName(device.name);
-                setEditingName(true);
-              }}
-            />
+            <>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={pinned ? 'Unpin from Favourites' : 'Pin to Favourites'}
+                accessibilityState={{ selected: pinned }}
+                hitSlop={6}
+                onPress={() => void togglePin()}
+                style={({ pressed }) => [styles.pin, { backgroundColor: pinned ? c.accentSoft : c.backgroundElement, opacity: pressed ? 0.7 : 1 }]}>
+                <Icon name={pinned ? 'star' : 'star-outline'} size={20} color={pinned ? c.accent : c.textSecondary} />
+              </Pressable>
+              <Button
+                title="Rename"
+                variant="secondary"
+                onPress={() => {
+                  setDraftName(device.name);
+                  setEditingName(true);
+                }}
+              />
+            </>
           ) : null}
         </Row>
 
@@ -187,6 +205,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 48 },
   iconWrap: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
   nameInput: { fontSize: 20, fontWeight: '600', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10 },
+  pin: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   readouts: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 18 },
   readout: { minWidth: '45%', flexGrow: 1 },
   section: { marginTop: 24, marginBottom: 10, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.6, opacity: 0.7 },

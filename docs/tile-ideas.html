@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Butter tile ideas</title>
+<style>
+  :root { --bg:#000; --card:#1c1c1e; --card2:#2c2c2e; --text:#fff; --muted:#9a9a9f; --butter:#F2B544; --butter-soft:rgba(242,181,68,.18); }
+  body { margin:0; background:#0b0b0c; color:var(--text); font-family:-apple-system,"SF Pro Text",Inter,Helvetica,Arial,sans-serif; padding:28px 24px 60px; }
+  h1 { font-size:22px; margin:0 0 4px; } .lead { color:var(--muted); margin:0 0 28px; max-width:720px; line-height:1.45; }
+  h2 { font-size:15px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:38px 0 10px; }
+  .note { color:var(--muted); font-size:13px; max-width:720px; line-height:1.45; margin:0 0 14px; }
+  .phone { width:390px; background:var(--bg); border-radius:28px; padding:16px; box-shadow:0 0 0 1px #222; display:inline-block; vertical-align:top; margin:0 18px 18px 0; }
+  .phone h3 { margin:6px 0 10px; font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .tile { background:var(--card); border-radius:18px; padding:14px; min-height:124px; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden; }
+  .tile.wide { grid-column:span 2; }
+  .top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .badge { width:40px; height:40px; border-radius:20px; display:flex; align-items:center; justify-content:center; background:var(--card2); font-size:20px; }
+  .power { width:34px; height:34px; border-radius:17px; background:var(--card2); display:flex; align-items:center; justify-content:center; font-size:15px; color:#bbb; }
+  .power.on { background:var(--butter); color:#1c1c1e; }
+  .name { font-weight:600; font-size:15px; margin-top:12px; } .sub { color:var(--muted); font-size:13px; margin-top:2px; }
+  .hero { font-size:34px; font-weight:700; letter-spacing:-.02em; line-height:1; }
+  .hero small { font-size:15px; font-weight:600; color:var(--muted); margin-left:6px; }
+  .row { display:flex; gap:12px; align-items:baseline; } .kv { color:var(--muted); font-size:12px; } .kv b { color:#ddd; font-weight:600; }
+  .spark { position:absolute; right:0; bottom:0; left:0; height:46px; opacity:.9; }
+  .label { font-size:11px; color:var(--muted); letter-spacing:.04em; text-transform:uppercase; }
+  .pill { display:inline-block; font-size:11px; padding:2px 7px; border-radius:9px; background:var(--card2); color:#ccc; margin-right:4px; }
+  .cmp { display:flex; flex-wrap:wrap; gap:0; }
+  .caption { width:390px; color:var(--muted); font-size:13px; line-height:1.4; margin:-6px 18px 20px 0; display:inline-block; vertical-align:top; }
+  .swatches { display:flex; gap:8px; margin:6px 0 10px; } .sw { width:26px; height:26px; border-radius:13px; box-shadow:0 0 0 2px #000 inset; }
+  .icons { display:flex; gap:8px; flex-wrap:wrap; } .ic { width:38px; height:38px; border-radius:19px; background:var(--card2); display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .ic.sel { outline:2px solid var(--butter); }
+</style></head><body>
+<h1>Butter · tile ideas</h1>
+<p class="lead">Five directions, each shown as a 390px phone column. Everything is drawn with the app's current palette so it reads as Butter, not as a different product. Sketch quality: proportions matter, the exact glyphs do not.</p>
+
+<h2>0 · Today, for reference</h2>
+<div class="cmp">
+<div class="phone"><h3>Bedroom</h3><div class="grid">
+  <div class="tile"><div class="top"><div class="badge">🌡</div></div><div><div class="name">SONOFF SNZB-02D-01</div><div class="sub">100% · 22.5° · 38%</div></div></div>
+  <div class="tile"><div class="top"><div class="badge">💡</div><div class="power">⏻</div></div><div><div class="name">lamp9</div><div class="sub">Off</div></div></div>
+  <div class="tile"><div class="top"><div class="badge">❄️</div><div class="power">⏻</div></div><div><div class="name">Midea AC Q19</div><div class="sub">Off · → 26.5° · 23.6° · 44…</div></div></div>
+  <div class="tile"><div class="top"><div class="badge">🌡</div></div><div><div class="name">Midea AC Q1A outdoor</div><div class="sub">15.8°</div></div></div>
+</div></div>
+<div class="caption">The sensor tile spends 70% of its area on an icon and empty space, and the only interesting number is in 13px grey. Every tile has the same shape and colour, so finding one means reading names.</div>
+</div>
+
+<h2>A · Hero reading + sparkline (sensors and climate)</h2>
+<p class="note">The main reading becomes the biggest thing on the tile; the name moves to the bottom in small type. The recorder already has the data for a 24-hour sparkline, drawn faintly across the bottom. The temperature colour follows a cold–comfortable–hot scale, so a glance tells you which room is cold without reading anything.</p>
+<div class="cmp">
+<div class="phone"><h3>Bedroom</h3><div class="grid">
+  <div class="tile" style="min-height:150px">
+    <div class="top"><div class="label">Bedroom</div><div class="kv">🔋 <b>100%</b></div></div>
+    <div style="margin-top:6px"><div class="hero" style="color:#8fd6a3">22.5°<small>38%</small></div><div class="kv" style="margin-top:6px">↓ 21.1° · ↑ 23.9° today</div></div>
+    <svg class="spark" viewBox="0 0 180 46" preserveAspectRatio="none"><path d="M0 30 C 20 32, 30 36, 50 34 S 80 20, 100 18 S 130 12, 150 16 S 170 24, 180 22 L180 46 L0 46 Z" fill="#8fd6a3" fill-opacity=".12"/><path d="M0 30 C 20 32, 30 36, 50 34 S 80 20, 100 18 S 130 12, 150 16 S 170 24, 180 22" fill="none" stroke="#8fd6a3" stroke-width="1.5"/></svg>
+  </div>
+  <div class="tile" style="min-height:150px">
+    <div class="top"><div class="label">Outside</div><div class="kv">☁️</div></div>
+    <div style="margin-top:6px"><div class="hero" style="color:#79b8f2">9.5°</div><div class="kv" style="margin-top:6px">↓ 6.8° · ↑ 15.8° today</div></div>
+    <svg class="spark" viewBox="0 0 180 46" preserveAspectRatio="none"><path d="M0 14 C 30 10, 50 12, 70 20 S 110 38, 140 36 S 170 30, 180 32 L180 46 L0 46 Z" fill="#79b8f2" fill-opacity=".12"/><path d="M0 14 C 30 10, 50 12, 70 20 S 110 38, 140 36 S 170 30, 180 32" fill="none" stroke="#79b8f2" stroke-width="1.5"/></svg>
+  </div>
+  <div class="tile wide" style="min-height:120px">
+    <div class="top"><div><div class="label">Living room · AC</div><div class="hero" style="margin-top:6px">23.6°<small>→ 26.5°</small></div></div><div class="power">⏻</div></div>
+    <div class="row" style="margin-top:8px"><span class="pill">Cool</span><span class="pill">Fan auto</span><span class="kv">44% humidity · 3.2 W</span></div>
+  </div>
+  <div class="tile"><div class="top"><div class="badge">💡</div><div class="power">⏻</div></div><div><div class="name">lamp9</div><div class="sub">Off</div></div></div>
+</div></div>
+<div class="caption"><b>Where it helps:</b> climate sensors, outdoor temperature, the AC tile when it's off (the readings are the value). <b>Cost:</b> none in native code; the sparkline comes from the recorder, and tiles without a recorder simply omit it.</div>
+</div>
+
+<h2>B · State colour: what's on, lights up</h2>
+<p class="note">Tiles stay neutral when a device is idle and fill with a colour that means something when it's active: butter yellow for a light that's on, blue for cooling, orange for heating, green for a running fan. You find the lamp that was left on across the room without reading a single title. This is the single biggest scanning win and needs no user configuration.</p>
+<div class="cmp">
+<div class="phone"><h3>Living room</h3><div class="grid">
+  <div class="tile" style="background:#3d2f12"><div class="top"><div class="badge" style="background:#F2B544;color:#1c1c1e">💡</div><div class="power on">⏻</div></div><div><div class="name">Living room light</div><div class="sub" style="color:#e2c27a">On · 70%</div></div></div>
+  <div class="tile"><div class="top"><div class="badge">💡</div><div class="power">⏻</div></div><div><div class="name">Desk lamp</div><div class="sub">Off</div></div></div>
+  <div class="tile" style="background:#12283d"><div class="top"><div class="badge" style="background:#4FA3E0;color:#102030">❄️</div><div class="power" style="background:#4FA3E0;color:#102030">⏻</div></div><div><div class="name">Living room AC</div><div class="sub" style="color:#9cc9ee">Cooling → 24.0° · 25.1°</div></div></div>
+  <div class="tile" style="background:#3d2112"><div class="top"><div class="badge" style="background:#F0803C;color:#2a1206">🔥</div><div class="power" style="background:#F0803C;color:#2a1206">⏻</div></div><div><div class="name">Heat pump zone 1</div><div class="sub" style="color:#f2b08a">Heating → 36.0° · 34.0°</div></div></div>
+  <div class="tile" style="background:#143322"><div class="top"><div class="badge" style="background:#4CBB7A;color:#0d2416">🌀</div><div class="power" style="background:#4CBB7A;color:#0d2416">⏻</div></div><div><div class="name">Fresh air</div><div class="sub" style="color:#9fe0b8">On · level 2</div></div></div>
+  <div class="tile"><div class="top"><div class="badge">🔌</div><div class="power">⏻</div></div><div><div class="name">Coffee machine</div><div class="sub">Off · 0.0 W</div></div></div>
+</div></div>
+<div class="caption"><b>Rule:</b> the colour is the state, never decoration, so a page of idle devices stays calm and anything active jumps out. Works together with A: a sensor tile's colour is its temperature.</div>
+</div>
+
+<h2>C · Per-device icon and colour, synced through the hub</h2>
+<p class="note">Your option A, done properly. Each device gets an icon from a large library and an accent colour from a palette; both are stored as a tag on the hub like rooms are, so they follow you to every phone. The colour tints the badge and, faintly, the tile; the icon replaces the generic category one. Picked once from the device page.</p>
+<div class="cmp">
+<div class="phone"><h3>Kitchen</h3><div class="grid">
+  <div class="tile" style="background:#1f1b2a"><div class="top"><div class="badge" style="background:#9B7BDA;color:#1b1226">☕</div><div class="power">⏻</div></div><div><div class="name">Coffee machine</div><div class="sub">Off · 0.0 W</div></div></div>
+  <div class="tile" style="background:#1a2320"><div class="top"><div class="badge" style="background:#4CBB7A;color:#0d2416">🪴</div><div class="power on" style="background:#4CBB7A;color:#0d2416">⏻</div></div><div><div class="name">Herb light</div><div class="sub">On · 06:00–20:00</div></div></div>
+  <div class="tile" style="background:#2a1f1b"><div class="top"><div class="badge" style="background:#F0803C;color:#2a1206">🍳</div><div class="power">⏻</div></div><div><div class="name">Hob extractor</div><div class="sub">Off</div></div></div>
+  <div class="tile" style="background:#1b2430"><div class="top"><div class="badge" style="background:#4FA3E0;color:#102030">💧</div></div><div><div class="name">Under the sink</div><div class="sub">Dry · 100%</div></div></div>
+</div>
+<div style="margin-top:14px"><div class="label" style="margin-bottom:6px">Device page · Appearance</div>
+<div class="swatches"><div class="sw" style="background:#F2B544;outline:2px solid #fff"></div><div class="sw" style="background:#F0803C"></div><div class="sw" style="background:#e05a5a"></div><div class="sw" style="background:#9B7BDA"></div><div class="sw" style="background:#4FA3E0"></div><div class="sw" style="background:#4CBB7A"></div><div class="sw" style="background:#8e8e93"></div></div>
+<div class="icons"><div class="ic sel">☕</div><div class="ic">💡</div><div class="ic">🛋️</div><div class="ic">🛏️</div><div class="ic">🍳</div><div class="ic">🪴</div><div class="ic">🚿</div><div class="ic">🧺</div><div class="ic">📺</div><div class="ic" style="width:auto;padding:0 12px;border-radius:19px;font-size:12px;color:#ccc">🔍&nbsp; search 7,000 icons</div></div></div>
+</div>
+<div class="caption"><b>Trade-off:</b> this is the user's work, not the app's. People who set it up love it; everyone else sees the defaults, which is why B should exist regardless. Icons are the real win here; colour is a bonus.</div>
+</div>
+
+<h2>D · Photo or image tiles</h2>
+<p class="note">Your option B. A background photo per device: the actual lamp, the actual room. Shown honestly, with the problems it brings.</p>
+<div class="cmp">
+<div class="phone"><h3>Bedroom</h3><div class="grid">
+  <div class="tile" style="background:linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.75) 100%),radial-gradient(circle at 30% 35%,#e9c58a 0,#8a5a2b 40%,#2a1a10 100%)"><div class="top"><div></div><div class="power on">⏻</div></div><div><div class="name">Bedside lamp</div><div class="sub" style="color:#ddd">On · 40%</div></div></div>
+  <div class="tile" style="background:linear-gradient(180deg,rgba(0,0,0,.1) 30%,rgba(0,0,0,.8) 100%),linear-gradient(135deg,#6b7f9a 0,#2b3443 60%,#161b24 100%)"><div class="top"><div></div><div></div></div><div><div class="hero" style="font-size:26px">22.5°</div><div class="sub" style="color:#ccc">Bedroom · 38%</div></div></div>
+  <div class="tile" style="background:linear-gradient(180deg,rgba(0,0,0,.1) 30%,rgba(0,0,0,.8) 100%),linear-gradient(135deg,#c9d6e3 0,#7d8d9c 50%,#2a3038 100%)"><div class="top"><div></div><div class="power">⏻</div></div><div><div class="name">Curtain</div><div class="sub" style="color:#ccc">30% open</div></div></div>
+  <div class="tile"><div class="top"><div class="badge">❄️</div><div class="power">⏻</div></div><div><div class="name">Bedroom AC</div><div class="sub">Off</div></div></div>
+</div></div>
+<div class="caption"><b>Problems:</b> text needs a dark gradient to stay readable, so every photo ends up half black; photos can't be synced through the hub (tags hold short strings), so they're per phone; mixed photo and plain tiles look patchy; and state colour (B) no longer has anywhere to go. It photographs well in a screenshot and scans worse in daily use. I'd keep it out, or offer it only for the few "featured" tiles in E.</div>
+</div>
+
+<h2>E · Featured tiles: pin what matters, make it bigger</h2>
+<p class="note">Your "highlight the important tiles". Long-press a tile to pin it; pinned tiles become wide, sit in a Favourites section at the top of Home, and carry the extra detail from A. The rest of the house stays compact below. The pinned set is stored on the hub too, so it's the same on every phone.</p>
+<div class="cmp">
+<div class="phone"><h3>Favourites</h3><div class="grid">
+  <div class="tile wide" style="min-height:118px"><div class="top"><div><div class="label">Living room</div><div class="hero" style="margin-top:6px;color:#8fd6a3">22.5°<small>38% · ↓21.1° ↑23.9°</small></div></div><div class="badge">🌡</div></div>
+    <svg class="spark" viewBox="0 0 360 46" preserveAspectRatio="none"><path d="M0 30 C 40 32, 60 36, 100 34 S 160 20, 200 18 S 260 12, 300 16 S 340 24, 360 22" fill="none" stroke="#8fd6a3" stroke-width="1.5"/></svg></div>
+  <div class="tile wide" style="min-height:96px;background:#3d2f12"><div class="top"><div><div class="name" style="margin-top:0">Living room light</div><div class="sub" style="color:#e2c27a">On · 70% · warm white</div></div><div class="power on">⏻</div></div>
+    <div style="margin-top:12px;height:6px;border-radius:3px;background:#5a4620"><div style="width:70%;height:6px;border-radius:3px;background:#F2B544"></div></div></div>
+  <div class="tile wide" style="min-height:96px"><div class="top"><div><div class="name" style="margin-top:0">Heat pump zone 1</div><div class="sub">Off · → 35.0° · 1.3 kWh today</div></div><div class="power">⏻</div></div></div>
+</div>
+<h3 style="margin-top:16px">Everything else</h3><div class="grid">
+  <div class="tile" style="min-height:88px"><div class="top"><div class="badge">🔌</div><div class="power">⏻</div></div><div><div class="name">Coffee machine</div><div class="sub">Off</div></div></div>
+  <div class="tile" style="min-height:88px"><div class="top"><div class="badge">🚪</div></div><div><div class="name">Front door</div><div class="sub">Closed</div></div></div>
+</div></div>
+<div class="caption"><b>Why it pairs with A and B:</b> the wide tile has room for the sparkline or an inline brightness bar, and the plain tiles below can shrink. Three sizes total: compact, standard, wide.</div>
+</div>
+
+<h2>Recommendation</h2>
+<p class="note" style="max-width:760px">Build <b>B + A + E</b> as one change, in that order of value: state colour costs nothing and fixes scanning for every user; hero readings fix the sensor tiles; favourites give you control over what's big. Then <b>C</b> (icon and colour per device, synced via hub tags) as the personalisation layer. Skip <b>D</b> or limit it to featured tiles. All of it is JavaScript, so it ships over the air.</p>
+</body></html>
