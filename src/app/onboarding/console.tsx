@@ -7,17 +7,47 @@
  */
 
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import * as WebBrowser from 'expo-web-browser';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { WebView } from 'react-native-webview';
+import type { WebViewProps } from 'react-native-webview';
 
 import { Body, Button, useColors } from '@/components/ui';
+
+type WebViewComponent = React.ComponentType<WebViewProps>;
+
+/** The WebView needs its native module; builds made before it was added fall back to a browser tab. */
+function loadWebView(): WebViewComponent | undefined {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('react-native-webview') as { WebView?: WebViewComponent; default?: WebViewComponent };
+    return mod.WebView ?? mod.default;
+  } catch {
+    return undefined;
+  }
+}
 
 export default function ConsoleScreen() {
   const c = useColors();
   const { baseUrl } = useLocalSearchParams<{ baseUrl: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
+  const [WebView] = useState(() => loadWebView());
+
+  useEffect(() => {
+    if (WebView) return;
+    // No WebView in this build: open a browser tab instead and leave this screen.
+    void WebBrowser.openBrowserAsync(baseUrl, { dismissButtonStyle: 'done' }).finally(() => router.back());
+  }, [WebView, baseUrl]);
+
+  if (!WebView) {
+    return (
+      <View style={[styles.center, { backgroundColor: c.background }]}>
+        <Stack.Screen options={{ title: 'Hub console', presentation: 'modal' }} />
+        <ActivityIndicator />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: c.background }}>
