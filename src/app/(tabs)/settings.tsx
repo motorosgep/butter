@@ -7,6 +7,7 @@ import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { StatusBanner } from '@/components/status-banner';
 import { Body, Button, Card, Chip, Heading, Row, Screen, Title, useColors } from '@/components/ui';
 import { defaultHistoryUrl } from '@/lib/history/client';
+import { normaliseAddress } from '@/lib/hub/discovery';
 import { selectActiveHub, useHub, type Hub, type HistoryStatus } from '@/lib/hub/store';
 
 const REPO = 'https://github.com/motorosgep/butter';
@@ -62,6 +63,8 @@ export default function Settings() {
           </Row>
         </Card>
 
+        {hub && !hub.demo ? <AddressSettings hub={hub} offline={status === 'offline'} /> : null}
+
         {hub && !hub.demo ? <HistorySettings hub={hub} status={historyStatus} /> : null}
 
         {hubs.length > 1 ? (
@@ -98,6 +101,61 @@ export default function Settings() {
         </Body>
       </ScrollView>
     </Screen>
+  );
+}
+
+function AddressSettings({ hub, offline }: { hub: Hub; offline: boolean }) {
+  const c = useColors();
+  const setHubAddress = useHub((s) => s.setHubAddress);
+  const relocate = useHub((s) => s.relocateHub);
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    const baseUrl = normaliseAddress(draft);
+    if (!baseUrl) return;
+    setBusy(true);
+    try {
+      await setHubAddress(hub.id, baseUrl);
+      setDraft('');
+    } catch (e) {
+      Alert.alert('No hub at that address', e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const find = async () => {
+    setBusy(true);
+    const ok = await relocate().catch(() => false);
+    setBusy(false);
+    if (!ok) Alert.alert('Not found', 'No hub with this device id answered on the network. If it has a new address, type it below.');
+  };
+  return (
+    <Card style={{ marginTop: 10 }}>
+      <Heading style={{ fontSize: 15 }}>Address</Heading>
+      <Body muted style={{ marginTop: 4 }}>
+        {offline
+          ? 'The hub is not answering at its stored address. Routers sometimes hand out new ones; Butter follows the hub by its device id when it can.'
+          : 'Change this if the hub gets a new address, or to reach it through a VPN or remote link.'}
+      </Body>
+      <Row style={{ marginTop: 10 }}>
+        <TextInput
+          value={draft}
+          onChangeText={setDraft}
+          placeholder={hub.baseUrl}
+          placeholderTextColor={c.textSecondary}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="url"
+          returnKeyType="done"
+          onSubmitEditing={() => void save()}
+          style={[styles.input, { color: c.text, backgroundColor: c.backgroundElement }]}
+        />
+        <Button title="Save" variant="secondary" disabled={busy || !draft.trim()} onPress={() => void save()} />
+      </Row>
+      <Row style={{ marginTop: 8 }}>
+        <Button title="Find it on the network" variant="secondary" icon="magnify" disabled={busy} onPress={() => void find()} />
+      </Row>
+    </Card>
   );
 }
 
