@@ -18,6 +18,7 @@ export default function DeviceScreen() {
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState('');
   const [newRoom, setNewRoom] = useState('');
+  const [editingRoom, setEditingRoom] = useState(false);
   const rooms = useMemo(() => [...new Set(all.map(roomOf).filter((r): r is string => !!r))].sort(), [all]);
 
   if (!device) {
@@ -43,7 +44,21 @@ export default function DeviceScreen() {
 
   const assignRoom = async (value: string | null) => {
     setNewRoom('');
+    setEditingRoom(false);
     await setRoom(device.serial_number, value).catch((e: Error) => Alert.alert('Could not set room', e.message));
+  };
+
+  // Rooms change rarely and a stray tap should not move a device, so ask first.
+  const confirmRoom = (value: string | null) => {
+    if (value === room) return;
+    Alert.alert(
+      value ? `Move to ${value}?` : 'Remove from its room?',
+      value ? `${device.name} will show under ${value} on every phone.` : `${device.name} will show as unassigned.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: value ? 'Move' : 'Remove', onPress: () => void assignRoom(value) },
+      ],
+    );
   };
 
   return (
@@ -105,24 +120,45 @@ export default function DeviceScreen() {
         <DeviceHistory device={device} />
 
         <Heading style={styles.section}>Room</Heading>
-        <Row style={{ flexWrap: 'wrap' }}>
-          <Chip label="None" selected={!room} onPress={() => void assignRoom(null)} />
-          {rooms.map((r) => (
-            <Chip key={r} label={r} selected={r === room} onPress={() => void assignRoom(r)} />
-          ))}
-        </Row>
-        <Row style={{ marginTop: 10 }}>
-          <TextInput
-            value={newRoom}
-            onChangeText={setNewRoom}
-            placeholder="New room"
-            placeholderTextColor={c.textSecondary}
-            returnKeyType="done"
-            onSubmitEditing={() => newRoom.trim() && void assignRoom(newRoom.trim())}
-            style={[styles.input, { color: c.text, backgroundColor: c.backgroundElement }]}
-          />
-          <Button title="Add" variant="secondary" disabled={!newRoom.trim()} onPress={() => void assignRoom(newRoom.trim())} />
-        </Row>
+        <Card>
+          <Row between>
+            <Body>{room ?? 'Not assigned to a room'}</Body>
+            <Button
+              title={editingRoom ? 'Cancel' : 'Change'}
+              variant="secondary"
+              icon={editingRoom ? undefined : 'pencil-outline'}
+              onPress={() => {
+                setNewRoom('');
+                setEditingRoom((v) => !v);
+              }}
+            />
+          </Row>
+          {editingRoom ? (
+            <>
+              <Body muted style={{ marginTop: 10 }}>
+                Pick a room; Butter asks before moving the device.
+              </Body>
+              <Row style={{ flexWrap: 'wrap', marginTop: 8 }}>
+                <Chip label="None" selected={!room} onPress={() => confirmRoom(null)} />
+                {rooms.map((r) => (
+                  <Chip key={r} label={r} selected={r === room} onPress={() => confirmRoom(r)} />
+                ))}
+              </Row>
+              <Row style={{ marginTop: 10 }}>
+                <TextInput
+                  value={newRoom}
+                  onChangeText={setNewRoom}
+                  placeholder="New room"
+                  placeholderTextColor={c.textSecondary}
+                  returnKeyType="done"
+                  onSubmitEditing={() => newRoom.trim() && confirmRoom(newRoom.trim())}
+                  style={[styles.input, { color: c.text, backgroundColor: c.backgroundElement }]}
+                />
+                <Button title="Add" variant="secondary" disabled={!newRoom.trim()} onPress={() => confirmRoom(newRoom.trim())} />
+              </Row>
+            </>
+          ) : null}
+        </Card>
 
         <Heading style={styles.section}>Details</Heading>
         <Card>
