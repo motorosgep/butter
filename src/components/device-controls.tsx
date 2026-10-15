@@ -5,6 +5,7 @@ import { capitalise, commandFor, controlValue, controls, type Control } from '@/
 import type { Device } from '@/lib/cube/types';
 import { useHub } from '@/lib/hub/store';
 
+import { Slider } from './slider';
 import { Body, Button, Card, Chip, Heading, Icon, Row, useColors } from './ui';
 
 export function DeviceControls({ device }: { device: Device }) {
@@ -38,6 +39,7 @@ function useSend(device: Device) {
 function ControlRow({ device, control }: { device: Device; control: Control }) {
   const c = useColors();
   const { send, busy } = useSend(device);
+  const [dragValue, setDragValue] = useState<number | undefined>();
   const value = controlValue(device, control);
   const disabled = !device.online || busy;
 
@@ -53,11 +55,33 @@ function ControlRow({ device, control }: { device: Device; control: Control }) {
           </Row>
         </Card>
       );
-    case 'level':
+    case 'level': {
+      const num = typeof value === 'number' ? value : undefined;
+      return (
+        <Card>
+          <Row between>
+            <Heading>{control.label}</Heading>
+            <Text style={[styles.big, { color: c.text }]}>{`${dragValue ?? num ?? '–'}${control.unit}`}</Text>
+          </Row>
+          <Slider
+            value={num ?? control.min}
+            min={control.min}
+            max={control.max}
+            step={1}
+            disabled={disabled || num === undefined}
+            onChange={setDragValue}
+            onRelease={(v) => {
+              setDragValue(undefined);
+              if (v !== num) void send(control, v);
+            }}
+          />
+        </Card>
+      );
+    }
     case 'setpoint': {
       const num = typeof value === 'number' ? value : undefined;
       const step = control.step;
-      const unit = control.kind === 'setpoint' ? '°' : control.unit;
+      const unit = '°';
       const clamp = (n: number) => Math.min(control.max, Math.max(control.min, Math.round(n / step) * step));
       return (
         <Card>
