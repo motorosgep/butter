@@ -15,8 +15,10 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { DemoHistory } from '../demo/history';
 import { HistoryClient, defaultHistoryUrl, probeHistory, type HistorySource } from '../history/client';
+import { clearSparklines } from '../history/sparkline';
 import { discoveryAvailable, probeHub, scanForHubs } from './discovery';
 
+import { PIN_TAG } from '../cube/appearance';
 import { mergeState } from '../cube/capabilities';
 import { CubeAuthError, CubeClient } from '../cube/client';
 import type { Subscription } from '../cube/sse';
@@ -61,6 +63,8 @@ interface HubState {
   control(serial: string, state: DeviceState): Promise<void>;
   rename(serial: string, name: string): Promise<void>;
   setRoom(serial: string, room: string | null): Promise<void>;
+  /** Pin a device to the Favourites section at the top of Home (stored as a hub tag). */
+  setPinned(serial: string, pinned: boolean): Promise<void>;
   setSecurity(sid: number, enable: boolean): Promise<void>;
   disarm(): Promise<void>;
   /** Find the history recorder for the active hub (auto or the hub's override). */
@@ -223,6 +227,7 @@ export const useHub = create<HubState>((set, get) => ({
   disconnect() {
     subscription?.close();
     subscription = undefined;
+    clearSparklines();
     set({ client: undefined, status: 'idle', history: undefined, historyStatus: 'unknown' });
   },
 
@@ -260,6 +265,16 @@ export const useHub = create<HubState>((set, get) => ({
     if (!client) throw new Error('not connected');
     const device = devices[serial];
     const tags = { ...(device?.tags ?? {}), room: room ?? '' };
+    await client.setTags(serial, tags);
+    if (device) set({ devices: { ...devices, [serial]: { ...device, tags } } });
+  },
+
+  async setPinned(serial, pinned) {
+    const { client, devices } = get();
+    if (!client) throw new Error('not connected');
+    const device = devices[serial];
+    // An empty string unpins: the hub may merge tags rather than replace them.
+    const tags = { ...(device?.tags ?? {}), [PIN_TAG]: pinned ? String(Math.floor(Date.now() / 1000)) : '' };
     await client.setTags(serial, tags);
     if (device) set({ devices: { ...devices, [serial]: { ...device, tags } } });
   },

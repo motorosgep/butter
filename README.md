@@ -53,8 +53,16 @@ enabled should work too; reports are welcome.
   remote-access URL.
 - One-time pairing: press **Allow** on the hub's console and the token lives in
   the phone's secure keychain from then on.
-- Home tab with a tile per device: power, readouts (temperature, humidity,
-  power draw, signal, battery) and online state, grouped by room.
+- Home tab with a tile per device, grouped by room. Tiles take a colour while
+  the device is doing something (butter for a light that is on, blue while
+  cooling, orange while heating, green for a running fan, red for a leak), so
+  you spot what is active without reading names. Sensor tiles show the reading
+  big, coloured on a cold-to-hot scale, with today's low and high and a 24-hour
+  sparkline when the history add-on is present.
+- Favourites: long-press a tile (or tap the star on its page) to pin it. Pinned
+  devices sit at the top of Home as wide tiles with an inline brightness or
+  position slider and the climate readings. Pins are stored on the hub, so
+  every phone shows the same.
 - Device page with every control the hub exposes: power, multi-channel
   toggles, brightness, colour temperature, modes (fan speed, AC mode and more),
   thermostat setpoints, swings, eco, curtain position, motor control, plus
@@ -175,8 +183,8 @@ next launch.
 1. **MVP.** Onboarding, device tiles, controls, live updates, security modes,
    settings, multiple hubs, demo mode. Done. TestFlight and Play internal
    testing next.
-2. **Rooms, favourites, scenes.** Rooms via tags, app-side scenes, local
-   notifications while the app is open.
+2. **Rooms, favourites, scenes.** Rooms and favourites via tags: done.
+   App-side scenes and local notifications while the app is open: next.
 3. **Platform polish.** Widgets, Siri Shortcuts, tablet layout, translations.
 4. **Assistant.** Ask the house questions and give it instructions in plain
    language.

@@ -4,6 +4,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { DeviceTile } from '@/components/device-tile';
 import { StatusBanner } from '@/components/status-banner';
 import { Body, Empty, Heading, Screen, Title, useColors } from '@/components/ui';
+import { pinnedAt } from '@/lib/cube/appearance';
 import { roomOf } from '@/lib/cube/capabilities';
 import type { Device } from '@/lib/cube/types';
 import { selectActiveHub, useDeviceList, useHub } from '@/lib/hub/store';
@@ -18,7 +19,11 @@ export default function Home() {
   const status = useHub((s) => s.status);
   const [refreshing, setRefreshing] = useState(false);
 
-  const sections = useMemo(() => groupByRoom(devices), [devices]);
+  const { favourites, sections } = useMemo(() => {
+    const pinned = devices.filter((d) => pinnedAt(d) !== undefined).sort((a, b) => (pinnedAt(a) ?? 0) - (pinnedAt(b) ?? 0));
+    const rest = devices.filter((d) => pinnedAt(d) === undefined);
+    return { favourites: pinned, sections: groupByRoom(rest) };
+  }, [devices]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -37,6 +42,16 @@ export default function Home() {
         {devices.length === 0 && status === 'online' ? (
           <Empty icon="home-search" title="No devices yet" body="Pair devices on the hub and they appear here automatically." />
         ) : null}
+        {favourites.length ? (
+          <View style={styles.section}>
+            <Heading style={styles.room}>Favourites</Heading>
+            {favourites.map((device) => (
+              <View key={device.serial_number} style={styles.gridRow}>
+                <DeviceTile device={device} wide />
+              </View>
+            ))}
+          </View>
+        ) : null}
         {sections.map(([room, list]) => (
           <View key={room} style={styles.section}>
             <Heading style={styles.room}>{room}</Heading>
@@ -50,6 +65,11 @@ export default function Home() {
             ))}
           </View>
         ))}
+        {devices.length > 1 && favourites.length === 0 ? (
+          <Body muted style={styles.hint}>
+            Long-press a tile to pin it to Favourites.
+          </Body>
+        ) : null}
       </ScrollView>
     </Screen>
   );
@@ -76,4 +96,5 @@ const styles = StyleSheet.create({
   section: { marginBottom: 18 },
   room: { marginBottom: 10, fontSize: 15, textTransform: 'uppercase', letterSpacing: 0.6, opacity: 0.7 },
   gridRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+  hint: { fontSize: 13, textAlign: 'center', marginTop: 6 },
 });

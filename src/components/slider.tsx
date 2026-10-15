@@ -17,6 +17,8 @@ export function Slider({
   max,
   step = 1,
   disabled,
+  color,
+  trackColor,
   onChange,
   onRelease,
 }: {
@@ -25,12 +27,16 @@ export function Slider({
   max: number;
   step?: number;
   disabled?: boolean;
+  /** Fill and thumb colour; the accent by default. */
+  color?: string;
+  trackColor?: string;
   /** Called while dragging, for a live readout. */
   onChange?: (value: number) => void;
   /** Called once when the finger lifts. */
   onRelease: (value: number) => void;
 }) {
   const c = useColors();
+  const fill = color ?? c.accent;
   const [width, setWidth] = useState(0);
   const [dragging, setDragging] = useState<number | undefined>();
   const widthRef = useRef(0);
@@ -79,9 +85,9 @@ export function Slider({
       accessibilityRole="adjustable"
       accessibilityValue={{ min, max, now: shown }}>
       {/* children never take the touch, so locationX stays relative to the whole track */}
-      <View pointerEvents="none" style={[styles.track, { backgroundColor: c.backgroundSelected }]} />
-      <View pointerEvents="none" style={[styles.track, styles.fill, { backgroundColor: c.accent, width: x + THUMB / 2 }]} />
-      <View pointerEvents="none" style={[styles.thumb, { left: x, backgroundColor: dragging !== undefined ? c.accent : '#FFFFFF', borderColor: c.accent }]} />
+      <View pointerEvents="none" style={[styles.track, { backgroundColor: trackColor ?? c.backgroundSelected }]} />
+      <View pointerEvents="none" style={[styles.track, styles.fill, { backgroundColor: fill, width: x + THUMB / 2 }]} />
+      <View pointerEvents="none" style={[styles.thumb, { left: x, backgroundColor: dragging !== undefined ? fill : '#FFFFFF', borderColor: fill }]} />
     </View>
   );
 }

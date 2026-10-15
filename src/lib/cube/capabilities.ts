@@ -127,6 +127,12 @@ function fmt(v: unknown, digits: number): string {
   return Number.isFinite(n) ? n.toFixed(digits) : String(v);
 }
 
+/** Format a raw attribute value with the unit its capability implies. */
+export function formatValue(capability: string, raw: unknown): string {
+  if (typeof raw === 'boolean') return booleanWord(capability, raw);
+  return capability in UNIT ? UNIT[capability](raw) : String(raw);
+}
+
 function booleanWord(capability: string, value: boolean): string {
   switch (capability) {
     case 'contact':
@@ -153,21 +159,18 @@ export function readouts(device: Device): Readout[] {
     const block = device.state[key];
     if (!block) continue;
     const [label, icon] = READOUT_LABEL[key];
-    const raw = firstScalar(block);
-    if (raw === undefined) continue;
-    let value: string;
-    if (typeof raw === 'boolean') value = booleanWord(key, raw);
-    else if (key in UNIT) value = UNIT[key](raw);
-    else value = String(raw);
-    out.push({ key, label, value, icon });
+    const entry = firstScalarEntry(block);
+    if (!entry) continue;
+    out.push({ key, label, value: formatValue(key, entry[1]), icon });
   }
   return out;
 }
 
-function firstScalar(block: Record<string, unknown>): string | number | boolean | undefined {
+/** The first plain value in a state block, with its attribute name: `['temperature', 21.4]`. */
+export function firstScalarEntry(block: Record<string, unknown>): [string, string | number | boolean] | undefined {
   for (const [k, v] of Object.entries(block)) {
     if (k === 'updated_at') continue;
-    if (typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean') return v;
+    if (typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean') return [k, v];
   }
   return undefined;
 }
