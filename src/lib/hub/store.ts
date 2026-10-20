@@ -24,6 +24,7 @@ import { CubeAuthError, CubeClient } from '../cube/client';
 import type { Subscription } from '../cube/sse';
 import type { BridgeInfo, CubeEvent, Device, DeviceState, DeviceStateEvent, SecurityMode } from '../cube/types';
 import { DEMO_BASE_URL, DemoClient } from '../demo/client';
+import type { Station } from '../measurements/odp';
 import type { Place } from '../weather/open-meteo';
 import type { HubApi } from './api';
 
@@ -37,6 +38,8 @@ export interface Hub {
   historyUrl?: string;
   /** Where the home is, for the weather tile; `null` means the user hid the tile. */
   place?: Place | null;
+  /** The HungaroMet station whose measurements the home browses. */
+  station?: Station | null;
 }
 
 /** The demo home's weather comes from a real place so the tile has something to show. */
@@ -78,6 +81,7 @@ interface HubState {
   setHistoryUrl(id: string, url: string | undefined): Promise<void>;
   /** Set the home's place for the weather tile; `null` hides the tile, `undefined` asks again. */
   setPlace(id: string, place: Place | null | undefined): Promise<void>;
+  setStation(id: string, station: Station | null | undefined): Promise<void>;
   /** Point a hub at a new address (after a router change) and reconnect. */
   setHubAddress(id: string, baseUrl: string): Promise<void>;
   /** Look for the active hub on the network by its device id and adopt its new address. */
@@ -228,6 +232,12 @@ export const useHub = create<HubState>((set, get) => ({
 
   async setPlace(id, place) {
     const hubs = get().hubs.map((h) => (h.id === id ? { ...h, place } : h));
+    await AsyncStorage.setItem(HUBS_KEY, JSON.stringify(hubs));
+    set({ hubs });
+  },
+
+  async setStation(id, station) {
+    const hubs = get().hubs.map((h) => (h.id === id ? { ...h, station } : h));
     await AsyncStorage.setItem(HUBS_KEY, JSON.stringify(hubs));
     set({ hubs });
   },

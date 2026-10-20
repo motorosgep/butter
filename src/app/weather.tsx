@@ -3,7 +3,7 @@
  * and a strip, and the week ahead. Also where the place is chosen.
  */
 
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -20,6 +20,8 @@ export default function WeatherScreen() {
   const setPlace = useHub((s) => s.setPlace);
   const place = hub?.place ?? undefined;
   const [picking, setPicking] = useState(!place);
+  // HungaroMet's measurements cover Hungary; show the way in when the home is there or a station was chosen.
+  const showMeasurements = !!hub && (hub.station !== undefined && hub.station !== null ? true : place?.country === 'Hungary');
   const { forecast, error, loading } = useForecast(place);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -67,6 +69,22 @@ export default function WeatherScreen() {
             </Row>
           </Card>
         )}
+        {!picking && place && showMeasurements ? (
+          <Card onPress={() => router.push('/measurements')} style={{ marginTop: 16 }}>
+            <Row>
+              <View style={styles.linkBadge}>
+                <Icon name="chart-bar" size={22} color="#4FA3E0" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Heading style={{ fontSize: 15 }}>Measurements</Heading>
+                <Body muted style={{ fontSize: 13, marginTop: 2 }}>
+                  {hub?.station ? `${hub.station.name} · rain by day, month and year, temperatures, last 48 hours` : 'HungaroMet station records near home: rain by day, month and year'}
+                </Body>
+              </View>
+              <Icon name="chevron-right" size={22} />
+            </Row>
+          </Card>
+        ) : null}
       </ScrollView>
     </Screen>
   );
@@ -285,6 +303,7 @@ const styles = StyleSheet.create({
   factLabel: { fontSize: 11 },
   factValue: { fontSize: 14, fontWeight: '600', fontVariant: ['tabular-nums'] },
   section: { marginTop: 22, marginBottom: 8, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.6, opacity: 0.7 },
+  linkBadge: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(79,163,224,0.18)' },
   hour: { alignItems: 'center', gap: 3, width: 40 },
   hourLabel: { fontSize: 11, fontVariant: ['tabular-nums'] },
   hourTemp: { fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'] },
