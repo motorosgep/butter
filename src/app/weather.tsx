@@ -7,13 +7,15 @@ import { Stack, router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { LineChart, type Tick } from '@/components/chart';
+import { Image } from 'expo-image';
+
+import { svgUri } from '@/components/chart';
 import { Body, Button, Card, Empty, Heading, Icon, Row, Screen, useColors } from '@/components/ui';
 import { SKY_RAIN, SKY_TEXT, SKY_TEXT_SOFT, SkyBackdrop, outdoorReading } from '@/components/weather-tile';
 import { mix, temperatureColor } from '@/lib/cube/appearance';
 import { selectActiveHub, useDeviceList, useHub } from '@/lib/hub/store';
 import { refreshForecast, useForecast } from '@/lib/weather/forecast';
-import { compass, dayLabel, describeCode, localHour, placeLabel, searchPlaces, type Forecast, type Place } from '@/lib/weather/open-meteo';
+import { compass, dayLabel, describeCode, localHour, placeLabel, searchPlaces, type Forecast, type HourPoint, type Place } from '@/lib/weather/open-meteo';
 
 export default function WeatherScreen() {
   const hub = useHub(selectActiveHub);
@@ -175,20 +177,11 @@ function ForecastView({ forecast, onChangePlace }: { forecast: Forecast; onChang
   const condition = describeCode(current.code, current.isDay);
   const tone = (t: number) => (c.scheme === 'dark' ? temperatureColor(t) : mix(temperatureColor(t), '#000000', 0.3));
   const rainTint = c.scheme === 'dark' ? SKY_RAIN : '#2F7FC4';
+  const today = daily[0];
   // The forecast's own clock keeps this pure; it is at most a quarter hour behind.
   const now = current.time;
 
-  const day = useMemo(() => {
-    const from = now - 3600;
-    const to = from + 25 * 3600;
-    const points = hourly.filter((h) => h.time >= from && h.time <= to).map((h) => ({ t: h.time, v: h.temperature }));
-    const ticks: Tick[] = hourly
-      .filter((h) => h.time >= from && h.time <= to && localHour(h.time, utcOffset) % 6 === 0)
-      .map((h) => ({ t: h.time, label: `${String(localHour(h.time, utcOffset)).padStart(2, '0')}:00` }));
-    return { from, to, points, ticks };
-  }, [hourly, utcOffset, now]);
-
-  const strip = hourly.filter((h) => h.time > now).slice(0, 24);
+  const strip = useMemo(() => hourly.filter((h) => h.time > now).slice(0, 24), [hourly, now]);
   const weekMin = Math.min(...daily.map((d) => d.min));
   const weekMax = Math.max(...daily.map((d) => d.max));
   const updated = new Date(forecast.fetchedAt);
@@ -212,32 +205,24 @@ function ForecastView({ forecast, onChangePlace }: { forecast: Forecast; onChang
           </Pressable>
         </Row>
       </Card>
-      <Card style={{ marginTop: 10 }}>
-        <View style={styles.facts}>
-          <Fact icon="water-percent" label="Humidity" value={`${Math.round(current.humidity)}%`} />
-          <Fact icon="weather-windy" label="Wind" value={`${Math.round(current.windSpeed)} km/h ${compass(current.windDirection)}`} />
-          {daily[0] ? <Fact icon="weather-rainy" label="Rain today" value={`${daily[0].rainChance}%${daily[0].precipitationSum > 0 ? ` · ${daily[0].precipitationSum.toFixed(1)} mm` : ''}`} /> : null}
-          {sensor !== undefined ? <Fact icon="home-thermometer-outline" label="Outside sensor" value={`${sensor.toFixed(1)}°`} /> : null}
-          {daily[0] ? <Fact icon="weather-sunset" label="Sun" value={`${hhmm(daily[0].sunrise, utcOffset)} – ${hhmm(daily[0].sunset, utcOffset)}`} /> : null}
-        </View>
-      </Card>
+      <View style={styles.tiles}>
+        <Tile icon="water-percent" value={`${Math.round(current.humidity)}%`} label="Humidity" />
+        <Tile icon="weather-windy" value={`${Math.round(current.windSpeed)} km/h`} label={`Wind ${compass(current.windDirection)}`} />
+        <Tile icon="weather-rainy" value={today ? `${today.rainChance}%` : '–'} label={today && today.precipitationSum > 0 ? `Rain · ${today.precipitationSum.toFixed(1)} mm` : 'Rain today'} tint={today && today.rainChance >= 50 ? rainTint : undefined} />
+      </View>
+      <View style={styles.tiles}>
+        <Tile icon="weather-sunset-up" value={today ? hhmm(today.sunrise, utcOffset) : '–'} label="Sunrise" />
+        <Tile icon="weather-sunset-down" value={today ? hhmm(today.sunset, utcOffset) : '–'} label="Sunset" />
+        {sensor !== undefined ? (
+          <Tile icon="home-thermometer-outline" value={`${sensor.toFixed(1)}°`} label="Outside sensor" />
+        ) : (
+          <Tile icon="white-balance-sunny" value={today ? duration(today.sunset - today.sunrise) : '–'} label="Daylight" />
+        )}
+      </View>
 
       <Heading style={styles.section}>Next 24 hours</Heading>
-      <Card>
-        <LineChart points={day.points} from={day.from} to={day.to} ticks={day.ticks} color={c.accent} format={(v) => `${Math.round(v)}°`} height={140} minSpan={4} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }} contentContainerStyle={{ gap: 14 }}>
-          {strip.map((h) => {
-            const hc = describeCode(h.code, h.isDay);
-            return (
-              <View key={h.time} style={styles.hour}>
-                <Text style={[styles.hourLabel, { color: c.textSecondary }]}>{`${String(localHour(h.time, utcOffset)).padStart(2, '0')}`}</Text>
-                <Icon name={hc.icon} size={22} color={h.rainChance >= 50 ? rainTint : c.text} />
-                <Text style={[styles.hourTemp, { color: c.text }]}>{`${Math.round(h.temperature)}°`}</Text>
-                <Text style={[styles.rain, { color: h.rainChance >= 30 ? rainTint : c.textSecondary }]}>{h.rainChance >= 10 ? `${h.rainChance}%` : ' '}</Text>
-              </View>
-            );
-          })}
-        </ScrollView>
+      <Card style={{ paddingHorizontal: 0 }}>
+        <HourlyStrip hours={strip} utcOffset={utcOffset} color={c.accent} rainTint={rainTint} />
       </Card>
 
       <Heading style={styles.section}>This week</Heading>
@@ -271,17 +256,91 @@ function ForecastView({ forecast, onChangePlace }: { forecast: Forecast; onChang
   );
 }
 
-function Fact({ icon, label, value }: { icon: string; label: string; value: string }) {
+const COL = 52;
+const CURVE = 48;
+const LABEL = 18;
+
+/** The coming hours as one scrolling panel: icons on top, the temperature curve with each hour's number riding on it, rain chance below. */
+function HourlyStrip({ hours, utcOffset, color, rainTint }: { hours: HourPoint[]; utcOffset: number; color: string; rainTint: string }) {
+  const c = useColors();
+  const width = hours.length * COL;
+  const temps = hours.map((h) => h.temperature);
+  const lo = Math.min(...temps);
+  const hi = Math.max(...temps);
+  const span = Math.max(4, hi - lo);
+  const bottom = (hi + lo) / 2 - span / 2;
+  const y = (v: number) => CURVE - 6 - ((v - bottom) / span) * (CURVE - 12);
+
+  const uri = useMemo(() => {
+    if (hours.length < 2) return undefined;
+    const pts = hours.map((h, i) => [i * COL + COL / 2, y(h.temperature)] as const);
+    const path = pts.map(([x, yy], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${yy.toFixed(1)}`).join(' ');
+    const area = `${path} L${pts[pts.length - 1][0].toFixed(1)} ${CURVE} L${pts[0][0].toFixed(1)} ${CURVE} Z`;
+    const dots = pts.map(([x, yy]) => `<circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="3" fill="${color}"/>`).join('');
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${CURVE}" viewBox="0 0 ${width} ${CURVE}"><path d="${area}" fill="${color}" fill-opacity="0.14"/><path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${dots}</svg>`;
+    return svgUri(svg);
+    // y depends only on the hours and the constants.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hours, color, width]);
+
+  if (!hours.length) return null;
+  const anyRain = hours.some((h) => h.rainChance >= 10);
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ width: width + 28, paddingHorizontal: 14 }}>
+      <View style={{ width }}>
+        <View style={{ flexDirection: 'row' }}>
+          {hours.map((h, i) => {
+            const hc = describeCode(h.code, h.isDay);
+            const hour = localHour(h.time, utcOffset);
+            return (
+              <View key={h.time} style={styles.col}>
+                <Text style={[styles.hourLabel, { color: hour === 0 && i > 0 ? c.text : c.textSecondary }]}>{hour === 0 && i > 0 ? dayLabel(h.time, utcOffset, h.time - 1) : String(hour).padStart(2, '0')}</Text>
+                <Icon name={hc.icon} size={22} color={h.rainChance >= 50 ? rainTint : c.text} />
+              </View>
+            );
+          })}
+        </View>
+        <View style={{ height: CURVE + LABEL, marginTop: -2 }}>
+          {uri ? <Image source={{ uri }} style={{ position: 'absolute', left: 0, top: LABEL, width, height: CURVE }} contentFit="fill" /> : null}
+          {hours.map((h, i) => (
+            <Text key={h.time} style={[styles.hourTemp, { position: 'absolute', left: i * COL, width: COL, top: LABEL + y(h.temperature) - 22, textAlign: 'center', color: c.text }]}>
+              {`${Math.round(h.temperature)}°`}
+            </Text>
+          ))}
+        </View>
+        {anyRain ? (
+          <View style={{ flexDirection: 'row', marginTop: 2 }}>
+            {hours.map((h) => (
+              <View key={h.time} style={styles.col}>
+                <Text style={[styles.rain, { color: h.rainChance >= 30 ? rainTint : c.textSecondary }]}>{h.rainChance >= 10 ? `${h.rainChance}%` : ' '}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+      </View>
+    </ScrollView>
+  );
+}
+
+function Tile({ icon, value, label, tint }: { icon: string; value: string; label: string; tint?: string }) {
   const c = useColors();
   return (
-    <View style={styles.fact}>
-      <Icon name={icon} size={16} color={c.textSecondary} />
-      <View>
-        <Text style={[styles.factLabel, { color: c.textSecondary }]}>{label}</Text>
-        <Text style={[styles.factValue, { color: c.text }]}>{value}</Text>
-      </View>
+    <View style={[styles.tile, { backgroundColor: c.backgroundElement }]}>
+      <Icon name={icon} size={20} color={tint ?? c.textSecondary} />
+      <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.tileValue, { color: tint ?? c.text }]}>
+        {value}
+      </Text>
+      <Text numberOfLines={1} style={[styles.tileLabel, { color: c.textSecondary }]}>
+        {label}
+      </Text>
     </View>
   );
+}
+
+function duration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.round((seconds % 3600) / 60);
+  return `${h}h ${String(m).padStart(2, '0')}m`;
 }
 
 function hhmm(time: number, utcOffset: number): string {
@@ -298,13 +357,13 @@ const styles = StyleSheet.create({
   hero: { fontSize: 54, fontWeight: '700', letterSpacing: -1.5, lineHeight: 60, color: SKY_TEXT, fontVariant: ['tabular-nums'] },
   change: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 7, paddingHorizontal: 11, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.18)' },
   changeText: { fontSize: 13, fontWeight: '600', color: SKY_TEXT },
-  facts: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginTop: 14 },
-  fact: { flexDirection: 'row', alignItems: 'center', gap: 6, minWidth: '44%' },
-  factLabel: { fontSize: 11 },
-  factValue: { fontSize: 14, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  tiles: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  tile: { flex: 1, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 6, alignItems: 'center', gap: 4 },
+  tileValue: { fontSize: 17, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  tileLabel: { fontSize: 11 },
   section: { marginTop: 22, marginBottom: 8, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.6, opacity: 0.7 },
   linkBadge: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(79,163,224,0.18)' },
-  hour: { alignItems: 'center', gap: 3, width: 40 },
+  col: { width: COL, alignItems: 'center', gap: 4 },
   hourLabel: { fontSize: 11, fontVariant: ['tabular-nums'] },
   hourTemp: { fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'] },
   rain: { fontSize: 10, fontVariant: ['tabular-nums'] },

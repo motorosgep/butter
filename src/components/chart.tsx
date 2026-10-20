@@ -23,7 +23,7 @@ export interface Tick {
 const GUTTER_LEFT = 56;
 const GUTTER_BOTTOM = 18;
 
-function svgUri(svg: string): string {
+export function svgUri(svg: string): string {
   return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
 }
 
