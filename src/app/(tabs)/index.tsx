@@ -3,6 +3,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { DeviceTile } from '@/components/device-tile';
 import { StatusBanner } from '@/components/status-banner';
+import { WeatherTile } from '@/components/weather-tile';
 import { Body, Empty, Heading, Screen, Title, useColors } from '@/components/ui';
 import { pinnedAt } from '@/lib/cube/appearance';
 import { roomOf } from '@/lib/cube/capabilities';
@@ -39,6 +40,7 @@ export default function Home() {
           {status === 'online' ? `${devices.length} devices · live` : status === 'connecting' ? 'Connecting…' : 'Not connected'}
         </Body>
         <StatusBanner />
+        <WeatherTile />
         {devices.length === 0 && status === 'online' ? (
           <Empty icon="home-search" title="No devices yet" body="Pair devices on the hub and they appear here automatically." />
         ) : null}

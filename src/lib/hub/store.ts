@@ -24,6 +24,7 @@ import { CubeAuthError, CubeClient } from '../cube/client';
 import type { Subscription } from '../cube/sse';
 import type { BridgeInfo, CubeEvent, Device, DeviceState, DeviceStateEvent, SecurityMode } from '../cube/types';
 import { DEMO_BASE_URL, DemoClient } from '../demo/client';
+import type { Place } from '../weather/open-meteo';
 import type { HubApi } from './api';
 
 export interface Hub {
@@ -34,7 +35,12 @@ export interface Hub {
   info?: BridgeInfo;
   /** Where the history recorder lives; empty = next to the hub on port 9900. */
   historyUrl?: string;
+  /** Where the home is, for the weather tile; `null` means the user hid the tile. */
+  place?: Place | null;
 }
+
+/** The demo home's weather comes from a real place so the tile has something to show. */
+const DEMO_PLACE: Place = { name: 'London', region: 'England', country: 'United Kingdom', lat: 51.5072, lon: -0.1276 };
 
 export type HistoryStatus = 'unknown' | 'checking' | 'available' | 'unavailable';
 
@@ -70,6 +76,8 @@ interface HubState {
   /** Find the history recorder for the active hub (auto or the hub's override). */
   detectHistory(): Promise<void>;
   setHistoryUrl(id: string, url: string | undefined): Promise<void>;
+  /** Set the home's place for the weather tile; `null` hides the tile, `undefined` asks again. */
+  setPlace(id: string, place: Place | null | undefined): Promise<void>;
   /** Point a hub at a new address (after a router change) and reconnect. */
   setHubAddress(id: string, baseUrl: string): Promise<void>;
   /** Look for the active hub on the network by its device id and adopt its new address. */
@@ -104,6 +112,7 @@ export const useHub = create<HubState>((set, get) => ({
   async addHub(partial, token) {
     const id = partial.demo ? 'demo' : partial.info?.deviceid ?? partial.baseUrl.replace(/[^A-Za-z0-9]/g, '-');
     const hub: Hub = { ...partial, id };
+    if (hub.demo && hub.place === undefined) hub.place = DEMO_PLACE;
     if (!hub.demo) await SecureStore.setItemAsync(tokenKey(id), token);
     const hubs = [...get().hubs.filter((h) => h.id !== id), hub];
     await AsyncStorage.multiSet([
@@ -215,6 +224,12 @@ export const useHub = create<HubState>((set, get) => ({
     set({ hubs });
     await get().connect();
     return get().status !== 'offline';
+  },
+
+  async setPlace(id, place) {
+    const hubs = get().hubs.map((h) => (h.id === id ? { ...h, place } : h));
+    await AsyncStorage.setItem(HUBS_KEY, JSON.stringify(hubs));
+    set({ hubs });
   },
 
   async setHistoryUrl(id, url) {

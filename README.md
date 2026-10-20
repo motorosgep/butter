@@ -72,6 +72,11 @@ enabled should work too; reports are welcome.
   battery and energy per hour or day, when the free
   [ihost-bridge](https://github.com/motorosgep/ihost-bridge#history-for-butter)
   add-on runs on the hub; the hub itself keeps history for its console only.
+- Weather at home: a tile at the top of Home with current conditions, today's
+  range, the next hours and your outdoor sensor's reading, plus a forecast
+  screen with the next 24 hours and the week ahead. Forecasts come from
+  [Open-Meteo](https://open-meteo.com/) with no API key; you pick the town
+  once per hub and only its coordinates are sent.
 - Multiple hubs, and a built-in demo home to explore without hardware.
 - Updates ship over the air, so most fixes reach you without a reinstall.
 

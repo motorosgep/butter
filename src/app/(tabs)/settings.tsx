@@ -9,6 +9,7 @@ import { Body, Button, Card, Chip, Heading, Row, Screen, Title, useColors } from
 import { defaultHistoryUrl } from '@/lib/history/client';
 import { normaliseAddress } from '@/lib/hub/discovery';
 import { selectActiveHub, useHub, type Hub, type HistoryStatus } from '@/lib/hub/store';
+import { placeLabel } from '@/lib/weather/open-meteo';
 
 const REPO = 'https://github.com/motorosgep/butter';
 
@@ -66,6 +67,8 @@ export default function Settings() {
         {hub && !hub.demo ? <AddressSettings hub={hub} offline={status === 'offline'} /> : null}
 
         {hub && !hub.demo ? <HistorySettings hub={hub} status={historyStatus} /> : null}
+
+        {hub ? <WeatherSettings hub={hub} /> : null}
 
         {hubs.length > 1 ? (
           <>
@@ -199,6 +202,27 @@ function HistorySettings({ hub, status }: { hub: Hub; status: HistoryStatus }) {
             }}
           />
         ) : null}
+      </Row>
+    </Card>
+  );
+}
+
+function WeatherSettings({ hub }: { hub: Hub }) {
+  const setPlace = useHub((s) => s.setPlace);
+  const place = hub.place;
+  return (
+    <Card style={{ marginTop: 10 }}>
+      <Heading style={{ fontSize: 15 }}>Weather</Heading>
+      <Body muted style={{ marginTop: 4 }}>
+        {place ? `Forecast for ${placeLabel(place)}, from Open-Meteo. Only the town's coordinates are sent.` : place === null ? 'The weather tile is hidden on Home.' : 'No place set yet.'}
+      </Body>
+      <Row style={{ marginTop: 10, flexWrap: 'wrap' }}>
+        <Button title={place ? 'Change place' : 'Pick a place'} variant="secondary" icon="map-marker-outline" onPress={() => router.push('/weather')} />
+        {place !== null ? (
+          <Button title="Hide tile" variant="secondary" icon="eye-off-outline" onPress={() => void setPlace(hub.id, null)} />
+        ) : (
+          <Button title="Show on Home" variant="secondary" icon="eye-outline" onPress={() => void setPlace(hub.id, undefined)} />
+        )}
       </Row>
     </Card>
   );
