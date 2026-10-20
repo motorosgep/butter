@@ -36,6 +36,7 @@ export default function RootLayout() {
       <Stack.Screen name="onboarding/console" options={{ title: 'Hub console', presentation: 'modal' }} />
       <Stack.Screen name="device/[serial]" options={{ title: '' }} />
       <Stack.Screen name="weather" options={{ title: 'Weather' }} />
+      <Stack.Screen name="measurements" options={{ title: 'Measurements' }} />
     </Stack>
   );
 }
