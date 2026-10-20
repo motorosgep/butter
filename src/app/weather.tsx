@@ -221,9 +221,7 @@ function ForecastView({ forecast, onChangePlace }: { forecast: Forecast; onChang
       </View>
 
       <Heading style={styles.section}>Next 24 hours</Heading>
-      <Card style={styles.stripCard}>
-        <HourlyStrip hours={strip} utcOffset={utcOffset} color={c.accent} rainTint={rainTint} />
-      </Card>
+      <HourlyStrip hours={strip} utcOffset={utcOffset} color={c.accent} rainTint={rainTint} />
 
       <Heading style={styles.section}>This week</Heading>
       <Card>
@@ -259,9 +257,7 @@ function ForecastView({ forecast, onChangePlace }: { forecast: Forecast; onChang
 const COL = 52;
 const CURVE = 48;
 const LABEL = 18;
-const STRIP_PAD_LEFT = 14;
-const STRIP_PAD_RIGHT = 32;
-const FADE = 36;
+const STRIP_PAD = 14;
 
 /** The coming hours as one scrolling panel: icons on top, the temperature curve with each hour's number riding on it, rain chance below. */
 function HourlyStrip({ hours, utcOffset, color, rainTint }: { hours: HourPoint[]; utcOffset: number; color: string; rainTint: string }) {
@@ -273,12 +269,6 @@ function HourlyStrip({ hours, utcOffset, color, rainTint }: { hours: HourPoint[]
   const span = Math.max(4, hi - lo);
   const bottom = (hi + lo) / 2 - span / 2;
   const y = (v: number) => CURVE - 6 - ((v - bottom) / span) * (CURVE - 12);
-
-  const [viewW, setViewW] = useState(0);
-  const [scrollX, setScrollX] = useState(0);
-  const contentW = width + STRIP_PAD_LEFT + STRIP_PAD_RIGHT;
-  const moreRight = viewW > 0 && scrollX + viewW < contentW - 6;
-  const moreLeft = scrollX > 6;
 
   const uri = useMemo(() => {
     if (hours.length < 2) return undefined;
@@ -294,14 +284,10 @@ function HourlyStrip({ hours, utcOffset, color, rainTint }: { hours: HourPoint[]
 
   if (!hours.length) return null;
   const anyRain = hours.some((h) => h.rainChance >= 10);
+  // The card itself is what scrolls: it slides past both screen edges with its own rounded ends.
   return (
-    <View onLayout={(e) => setViewW(e.nativeEvent.layout.width)}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        onScroll={(e) => setScrollX(e.nativeEvent.contentOffset.x)}
-        scrollEventThrottle={32}
-        contentContainerStyle={{ width: contentW, paddingLeft: STRIP_PAD_LEFT, paddingRight: STRIP_PAD_RIGHT }}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.stripScroll} contentContainerStyle={styles.stripContent}>
+      <View style={[styles.stripCard, { width: width + 2 * STRIP_PAD, backgroundColor: c.backgroundElement }]}>
       <View style={{ width }}>
         <View style={{ flexDirection: 'row' }}>
           {hours.map((h, i) => {
@@ -333,23 +319,8 @@ function HourlyStrip({ hours, utcOffset, color, rainTint }: { hours: HourPoint[]
           </View>
         ) : null}
       </View>
-      </ScrollView>
-      {moreRight ? <EdgeFade side="right" color={c.backgroundElement} /> : null}
-      {moreLeft ? <EdgeFade side="left" color={c.backgroundElement} /> : null}
-    </View>
-  );
-}
-
-/** A soft fade over one end of a horizontal scroller, so clipped content reads as "more". */
-function EdgeFade({ side, color }: { side: 'left' | 'right'; color: string }) {
-  const uri = useMemo(() => {
-    const stops = side === 'right' ? `<stop offset="0" stop-color="${color}" stop-opacity="0"/><stop offset="1" stop-color="${color}" stop-opacity="1"/>` : `<stop offset="0" stop-color="${color}" stop-opacity="1"/><stop offset="1" stop-color="${color}" stop-opacity="0"/>`;
-    return svgUri(`<svg xmlns="http://www.w3.org/2000/svg" width="${FADE}" height="10" viewBox="0 0 ${FADE} 10"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="0">${stops}</linearGradient></defs><rect width="${FADE}" height="10" fill="url(#f)"/></svg>`);
-  }, [side, color]);
-  return (
-    <View pointerEvents="none" style={[styles.fade, side === 'right' ? { right: 0 } : { left: 0 }]}>
-      <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="fill" />
-    </View>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -395,9 +366,9 @@ const styles = StyleSheet.create({
   section: { marginTop: 22, marginBottom: 8, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.6, opacity: 0.7 },
   linkBadge: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(79,163,224,0.18)' },
   col: { width: COL, alignItems: 'center', gap: 4 },
-  // Bleeds to the right screen edge so the clipped column shows there is more.
-  stripCard: { paddingHorizontal: 0, marginRight: -16, borderTopRightRadius: 0, borderBottomRightRadius: 0 },
-  fade: { position: 'absolute', top: 0, bottom: 0, width: FADE },
+  stripScroll: { marginHorizontal: -16 },
+  stripContent: { paddingHorizontal: 16 },
+  stripCard: { borderRadius: 16, padding: STRIP_PAD },
   hourLabel: { fontSize: 11, fontVariant: ['tabular-nums'] },
   hourTemp: { fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'] },
   rain: { fontSize: 10, fontVariant: ['tabular-nums'] },
