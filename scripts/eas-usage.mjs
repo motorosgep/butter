@@ -20,4 +20,4 @@ for (const platform of ['IOS', 'ANDROID']) {
   console.log(`${platform.padEnd(8)} ${String(mine.length).padStart(2)} / ${LIMIT} builds in ${month}${detail ? `  (${detail})` : ''}`);
 }
 console.log('Updates are not counted; the Free plan caps them at 1,000 monthly active users and 100 GiB.');
-console.log('Account usage page: https://expo.dev/accounts/b2fodist/settings/usage');
+console.log('Account usage page: expo.dev > your account > Settings > Usage');
