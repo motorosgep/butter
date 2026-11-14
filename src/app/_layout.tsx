@@ -42,6 +42,7 @@ export default function RootLayout() {
       <Stack.Screen name="device/[serial]" options={{ title: '' }} />
       <Stack.Screen name="weather" options={{ title: 'Weather' }} />
       <Stack.Screen name="measurements" options={{ title: 'Measurements' }} />
+      <Stack.Screen name="solar" options={{ title: 'Solar' }} />
     </Stack>
   );
 }

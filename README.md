@@ -82,6 +82,13 @@ enabled should work too; reports are welcome.
   month and year against the station's own long-term averages, daily and
   monthly temperatures, and the last 48 hours hour by hour. Automatic stations
   go back to 2002; the denser rain-gauge network reports rain only.
+- Solar (Huawei FusionSolar): Home shows what the panels make right now, with
+  today's curve and the energy for the day, month, year and lifetime. With the
+  [ihost-bridge](https://github.com/motorosgep/ihost-bridge#solar-huawei-fusionsolar)
+  add-on reading the plant you also get charts by day, month and year, and the
+  plant is a device on the hub. Without the bridge, paste your plant's kiosk
+  link and Butter reads it itself: no Huawei account, and only the link's key
+  is sent, straight to FusionSolar.
 - Multiple hubs, and a built-in demo home to explore without hardware.
 - Updates ship over the air, so most fixes reach you without a reinstall.
 

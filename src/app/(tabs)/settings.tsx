@@ -9,6 +9,7 @@ import { Body, Button, Card, Chip, Heading, Row, Screen, Title, useColors } from
 import { defaultHistoryUrl } from '@/lib/history/client';
 import { normaliseAddress } from '@/lib/hub/discovery';
 import { selectActiveHub, useHub, type Hub, type HistoryStatus } from '@/lib/hub/store';
+import { useHomeSolar } from '@/lib/solar/store';
 import { placeLabel } from '@/lib/weather/open-meteo';
 
 const REPO = 'https://github.com/motorosgep/butter';
@@ -69,6 +70,8 @@ export default function Settings() {
         {hub && !hub.demo ? <HistorySettings hub={hub} status={historyStatus} /> : null}
 
         {hub ? <WeatherSettings hub={hub} /> : null}
+
+        {hub ? <SolarSettings /> : null}
 
         {hubs.length > 1 ? (
           <>
@@ -223,6 +226,25 @@ function WeatherSettings({ hub }: { hub: Hub }) {
         ) : (
           <Button title="Show on Home" variant="secondary" icon="eye-outline" onPress={() => void setPlace(hub.id, undefined)} />
         )}
+      </Row>
+    </Card>
+  );
+}
+
+function SolarSettings() {
+  const { available, source, solar } = useHomeSolar();
+  return (
+    <Card style={{ marginTop: 10 }}>
+      <Heading style={{ fontSize: 15 }}>Solar</Heading>
+      <Body muted style={{ marginTop: 4 }}>
+        {!available
+          ? 'Have Huawei solar panels? Set them up on the ihost-bridge add-on, or paste your FusionSolar kiosk link here, and production shows on Home.'
+          : source === 'bridge'
+            ? `${solar ? `${solar.name}: ` : ''}read by the ihost-bridge add-on on your hub, which also keeps the history.`
+            : `${solar ? `${solar.name}: ` : ''}production from your FusionSolar kiosk link, read straight from Huawei. Only the link's key is sent.`}
+      </Body>
+      <Row style={{ marginTop: 10, flexWrap: 'wrap' }}>
+        <Button title={available ? 'Open solar' : 'Add solar'} variant="secondary" icon="solar-power-variant" onPress={() => router.push('/solar')} />
       </Row>
     </Card>
   );

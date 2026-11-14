@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { DeviceTile } from '@/components/device-tile';
+import { SolarTile } from '@/components/solar-tile';
 import { StatusBanner } from '@/components/status-banner';
 import { WeatherTile } from '@/components/weather-tile';
 import { Body, Empty, Heading, Screen, Title, useColors } from '@/components/ui';
@@ -41,6 +42,7 @@ export default function Home() {
         </Body>
         <StatusBanner />
         <WeatherTile />
+        <SolarTile />
         {devices.length === 0 && status === 'online' ? (
           <Empty icon="home-search" title="No devices yet" body="Pair devices on the hub and they appear here automatically." />
         ) : null}
