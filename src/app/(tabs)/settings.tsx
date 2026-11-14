@@ -98,6 +98,8 @@ export default function Settings() {
 
         {hub ? <SolarSettings /> : null}
 
+        {hub && !hub.demo ? <NetworkSettings /> : null}
+
         {hubs.length > 1 ? (
           <>
             <Heading style={styles.section}>Switch hub</Heading>
@@ -270,6 +272,20 @@ function SolarSettings() {
       </Body>
       <Row style={{ marginTop: 10, flexWrap: 'wrap' }}>
         <Button title={available ? 'Open solar' : 'Add solar'} variant="secondary" icon="solar-power-variant" onPress={() => router.push('/solar')} />
+      </Row>
+    </Card>
+  );
+}
+
+function NetworkSettings() {
+  return (
+    <Card style={{ marginTop: 10 }}>
+      <Heading style={{ fontSize: 15 }}>Network</Heading>
+      <Body muted style={{ marginTop: 4 }}>
+        With a TP-Link Deco set up on the ihost-bridge add-on: who is connected, whether the internet is up, and fixed addresses for the hub and your smart-home devices.
+      </Body>
+      <Row style={{ marginTop: 10, flexWrap: 'wrap' }}>
+        <Button title="Open network" variant="secondary" icon="router-wireless" onPress={() => router.push('/network')} />
       </Row>
     </Card>
   );

@@ -97,6 +97,11 @@ const HUBS_KEY = 'butter.hubs';
 const ACTIVE_KEY = 'butter.activeHub';
 const tokenKey = (id: string) => `butter.token.${id.replace(/[^A-Za-z0-9._-]/g, '_')}`;
 
+/** The hub's access token, for bridge pages that only answer apps paired with the hub (the home network). */
+export function hubToken(id: string): Promise<string | null> {
+  return SecureStore.getItemAsync(tokenKey(id));
+}
+
 let subscription: Subscription | undefined;
 
 export const useHub = create<HubState>((set, get) => ({
