@@ -14,7 +14,8 @@
 
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
+
 
 import { activeAccent, alpha, climateReading, heroReading, isPinned, mix, tileIcon, type Accent, type HeroReading } from '@/lib/cube/appearance';
 import { capitalise, commandFor, controls, controlValue, hasCapability, isControllable, isOn, readouts, stateValue, summary, type Control } from '@/lib/cube/capabilities';
@@ -25,6 +26,7 @@ import { useHub } from '@/lib/hub/store';
 import { Slider } from './slider';
 import { Sparkline } from './sparkline';
 import { Icon, cardChrome, outlineIcon, useColors } from './ui';
+import { Text } from '@/components/text';
 
 type Palette = ReturnType<typeof useColors>;
 type LevelControl = Extract<Control, { kind: 'level' }>;
@@ -91,7 +93,7 @@ function HeroBody({ device, hero, wide, c }: { device: Device; hero: HeroReading
       <>
         <View style={styles.top}>
           <View style={{ flex: 1 }}>
-            <Text numberOfLines={1} style={[styles.label, { color: c.textSecondary }]}>
+            <Text numberOfLines={1} style={[styles.label, { color: c.tileName }]}>
               {device.name}
             </Text>
             <View style={styles.heroRow}>
@@ -105,7 +107,7 @@ function HeroBody({ device, hero, wide, c }: { device: Device; hero: HeroReading
           </View>
           {battery ? <Small icon={batteryIcon(battery.value)} text={battery.value} c={c} /> : !device.online ? <Small icon="lan-disconnect" text="Offline" c={c} /> : null}
         </View>
-        {trace ? <Sparkline points={trace.points} color={color} minSpan={hero.minSpan} height={26} /> : null}
+        {trace ? <Sparkline points={trace.points} color={color} minSpan={hero.minSpan} height={22} line style={styles.spark} /> : null}
       </>
     );
   }
@@ -114,7 +116,7 @@ function HeroBody({ device, hero, wide, c }: { device: Device; hero: HeroReading
   return (
     <>
       <View style={styles.top}>
-        <Text numberOfLines={1} style={[styles.label, { color: c.textSecondary, flex: 1 }]}>
+        <Text numberOfLines={1} style={[styles.label, { color: c.tileName, flex: 1 }]}>
           {device.name}
         </Text>
         {battery ? <Small icon={batteryIcon(battery.value)} text={battery.value} c={c} /> : null}
@@ -130,7 +132,7 @@ function HeroBody({ device, hero, wide, c }: { device: Device; hero: HeroReading
           </Text>
         ) : null}
       </View>
-      {trace ? <Sparkline points={trace.points} color={color} minSpan={hero.minSpan} height={32} /> : null}
+      {trace ? <Sparkline points={trace.points} color={color} minSpan={hero.minSpan} height={24} line style={styles.spark} /> : null}
     </>
   );
 }
@@ -171,7 +173,8 @@ function IconWell({ device, accentColor, c }: { device: Device; accentColor: str
     { backgroundColor: accentColor ?? c.backgroundSelected },
     accentColor && c.glow ? { boxShadow: `0px 0px 16px ${alpha(accentColor, c.glow)}` } : null,
   ];
-  const icon = <Icon name={outlineIcon(tileIcon(device, activeAccent(device)))} size={20} color={accentColor ? c.onState : c.textSecondary} />;
+  const accent = activeAccent(device);
+  const icon = <Icon name={outlineIcon(tileIcon(device, accent))} size={20} color={accent ? c.onState[accent.tone] : c.textSecondary} />;
   if (!canToggle) return <View style={well}>{icon}</View>;
   return (
     <Pressable
@@ -200,7 +203,7 @@ function ControlBody({ device, accent, wide, c }: { device: Device; accent: Acce
           <IconWell device={device} accentColor={accentColor} c={c} />
         </View>
         <View>
-          <Text numberOfLines={1} style={[styles.name, { color: accentColor ? c.text : c.textSecondary }]}>
+          <Text numberOfLines={1} style={[styles.name, { color: accentColor ? c.text : c.tileName }]}>
             {device.name}
           </Text>
           <Text numberOfLines={1} style={[styles.summary, { color: subColor }]}>
@@ -219,7 +222,9 @@ function ControlBody({ device, accent, wide, c }: { device: Device; accent: Acce
   const climate = climateReading(device, c.readings);
   const setpoint = controls(device).find((x): x is SetpointControl => x.kind === 'setpoint');
   const level = device.online && !climate ? inlineLevel(device, on) : undefined;
-  const currentColor = climate?.currentColor ? legible(climate.currentColor, c) : c.text;
+  // While heating or cooling the room reading takes the state's colour; idle, the temperature scale's.
+  const currentColor = accentColor ? subColor : climate?.currentColor ? legible(climate.currentColor, c) : c.text;
+  const nudging = !!setpoint && on !== false && device.online;
   const heroStyle = [styles.hero, styles.heroClimate, { fontWeight: c.type.hero }];
 
   return (
@@ -227,7 +232,7 @@ function ControlBody({ device, accent, wide, c }: { device: Device; accent: Acce
       <View style={[styles.top, { alignItems: 'center' }]}>
         <IconWell device={device} accentColor={accentColor} c={c} />
         <View style={styles.wideText}>
-          <Text numberOfLines={1} style={[styles.name, { marginTop: 0, color: accentColor ? c.text : c.textSecondary }]}>
+          <Text numberOfLines={1} style={[styles.name, { marginTop: 0, color: accentColor ? c.text : c.tileName }]}>
             {device.name}
           </Text>
           {climate?.current ? (
@@ -242,11 +247,13 @@ function ControlBody({ device, accent, wide, c }: { device: Device; accent: Acce
               <Text style={[styles.heroSmall, { color: subColor }]}>target</Text>
             </View>
           ) : null}
-          <Text numberOfLines={1} style={[styles.summary, { color: subColor }]}>
-            {climate ? climateDetail(device) : summary(device)}
-          </Text>
+          {nudging && climate?.current ? null : (
+            <Text numberOfLines={1} style={[styles.summary, { color: subColor }]}>
+              {climate ? climateDetail(device) : summary(device)}
+            </Text>
+          )}
         </View>
-        {setpoint && on !== false && device.online ? <SetpointButtons device={device} setpoint={setpoint} c={c} tint={subColor} /> : null}
+        {nudging ? <SetpointButtons device={device} setpoint={setpoint} c={c} tint={subColor} /> : null}
       </View>
       {level ? <InlineLevel device={device} level={level} color={activeColor} c={c} /> : null}
     </>
@@ -264,7 +271,7 @@ function SetpointButtons({ device, setpoint, c, tint }: { device: Device; setpoi
     const next = Math.min(setpoint.max, Math.max(setpoint.min, Math.round((current + dir * setpoint.step) * 10) / 10));
     if (next !== current) void control(device.serial_number, commandFor(setpoint, next)).catch(() => undefined);
   };
-  const button = [styles.round, { backgroundColor: c.backgroundElement }, c.cardOutline ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.cardOutline } : null];
+  const button = [styles.round, { backgroundColor: c.raised }, c.cardOutline ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.cardOutline } : null];
   return (
     <View style={styles.roundRow}>
       <Pressable accessibilityRole="button" accessibilityLabel={`Lower ${device.name} target`} onPress={() => nudge(-1)} style={({ pressed }) => [...button, { opacity: pressed ? 0.6 : 1 }]}>
@@ -340,9 +347,10 @@ function InlineLevel({ device, level, color, c }: { device: Device; level: Level
 
 const styles = StyleSheet.create({
   tile: { flex: 1, padding: 14, minHeight: 116, justifyContent: 'space-between', overflow: 'hidden' },
-  heroTile: { minHeight: 140, paddingBottom: 36 },
+  heroTile: { minHeight: 140, paddingBottom: 44 },
+  spark: { left: 14, right: 14, bottom: 14 },
   wide: { minHeight: 0, justifyContent: 'flex-start' },
-  wideHero: { paddingBottom: 30 },
+  wideHero: { paddingBottom: 42 },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   well: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   name: { fontSize: 13, fontWeight: '600' },

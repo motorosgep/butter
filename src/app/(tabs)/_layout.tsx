@@ -1,24 +1,22 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { Tabs } from 'expo-router/tabs';
 
+import { PillTabBar } from '@/components/tab-bar';
 import { useColors } from '@/components/ui';
 
+/**
+ * Home, Security and Settings, under the floating pill tab bar the Butter
+ * design draws (icons only, the current tab in butter). The bar is ours, so it
+ * follows the theme in every scheme.
+ */
 export default function TabLayout() {
   const c = useColors();
   return (
-    // The tab bar stays native; it only takes the theme's colours (the background shows on iOS 18 and earlier, iOS 26 draws glass).
-    <NativeTabs tintColor={c.accent} backgroundColor={c.background}>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="security">
-        <NativeTabs.Trigger.Icon sf="shield.fill" md="security" />
-        <NativeTabs.Trigger.Label>Security</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="settings">
-        <NativeTabs.Trigger.Icon sf="gear" md="settings" />
-        <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <Tabs
+      tabBar={(props) => <PillTabBar {...props} />}
+      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: c.background } }}>
+      <Tabs.Screen name="index" options={{ title: 'Home' }} />
+      <Tabs.Screen name="security" options={{ title: 'Security' }} />
+      <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+    </Tabs>
   );
 }

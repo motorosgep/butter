@@ -18,12 +18,15 @@ export function Sparkline({
   color,
   height = 44,
   minSpan = 1,
+  line = false,
   style,
 }: {
   points: SparkPoint[];
   color: string;
   height?: number;
   minSpan?: number;
+  /** Just the line, a little heavier, with no filled area under it. */
+  line?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
   const [width, setWidth] = useState(0);
@@ -50,11 +53,11 @@ export function Sparkline({
     const area = `${path} L${width} ${height} L0 ${height} Z`;
     const svg =
       `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">` +
-      `<path d="${area}" fill="${color}" fill-opacity="0.13"/>` +
-      `<path d="${path}" fill="none" stroke="${color}" stroke-opacity="0.85" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>` +
+      (line ? '' : `<path d="${area}" fill="${color}" fill-opacity="0.13"/>`) +
+      `<path d="${path}" fill="none" stroke="${color}" stroke-opacity="${line ? 1 : 0.85}" stroke-width="${line ? 2 : 1.5}" stroke-linejoin="round" stroke-linecap="round"/>` +
       `</svg>`;
     return svgUri(svg);
-  }, [points, color, width, height, minSpan]);
+  }, [points, color, width, height, minSpan, line]);
 
   return (
     <View pointerEvents="none" style={[{ position: 'absolute', left: 0, right: 0, bottom: 0, height }, style]} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>

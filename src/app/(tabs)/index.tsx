@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+
 
 import { DeviceTile } from '@/components/device-tile';
 import { HomeHeader } from '@/components/home-header';
@@ -11,6 +12,8 @@ import { pinnedAt } from '@/lib/cube/appearance';
 import { isOn, roomOf } from '@/lib/cube/capabilities';
 import type { Device } from '@/lib/cube/types';
 import { selectActiveHub, useDeviceList, useHub } from '@/lib/hub/store';
+import { Text } from '@/components/text';
+import { TAB_BAR_SPACE } from '@/components/tab-bar';
 
 const UNASSIGNED = 'Unassigned';
 
@@ -107,9 +110,9 @@ function chunk<T>(list: T[], size: number): T[][] {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 18, paddingBottom: 40 },
-  section: { marginBottom: 18 },
-  roomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 10, marginBottom: 10, marginHorizontal: 4 },
+  content: { padding: 18, paddingBottom: TAB_BAR_SPACE },
+  section: { marginBottom: 0 },
+  roomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 12, marginBottom: 10, marginHorizontal: 4 },
   room: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
   roomCount: { fontSize: 12, fontWeight: '600' },
   gridRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },

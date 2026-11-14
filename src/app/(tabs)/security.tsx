@@ -4,6 +4,7 @@ import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { StatusBanner } from '@/components/status-banner';
 import { Body, Button, Card, Empty, Heading, Icon, Row, Screen, Title, useColors } from '@/components/ui';
 import { useHub } from '@/lib/hub/store';
+import { TAB_BAR_SPACE } from '@/components/tab-bar';
 
 const LABEL: Record<string, [string, string]> = {
   home_mode: ['Home', 'home-lock'],
@@ -62,6 +63,6 @@ export default function Security() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 16, paddingBottom: 40 },
+  content: { padding: 16, paddingBottom: TAB_BAR_SPACE },
   iconWrap: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
 });

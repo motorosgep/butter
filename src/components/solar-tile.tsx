@@ -11,7 +11,8 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+
 
 import { clock, formatEnergy, formatPower, type Solar, type SolarPoint } from '@/lib/solar/fusionsolar';
 import { useHomeSolar } from '@/lib/solar/store';
@@ -19,6 +20,7 @@ import type { SolarPalette } from '@/theme';
 
 import { svgUri } from './chart';
 import { Body, Card, useColors } from './ui';
+import { Text } from '@/components/text';
 
 /** The curve spans the hours the sun can be up, so it fills the tile in winter and summer alike. */
 const DAWN = 4 * 60;
@@ -38,18 +40,14 @@ interface Box {
 function backdropSvg(size: Box, curveTop: number, points: SolarPoint[], making: boolean, p: SolarPalette): string {
   const gold = p.gold;
   const { w, h } = size;
-  const { top, bottom } = making ? p.making : p.resting;
+  const { fill } = making ? p.making : p.resting;
   const base = curveTop + CURVE_H - AXIS_H;
   const hi = Math.max(0.5, ...points.map((p) => p.v)) * 1.12;
   const x = (t: number) => hourX(t) * w;
   const y = (v: number) => base - (v / hi) * (CURVE_H - AXIS_H - 6);
   const parts: string[] = [];
-  parts.push(
-    `<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bottom}"/></linearGradient>` +
-      `<linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${gold}" stop-opacity="${making ? 0.5 : 0.22}"/><stop offset="1" stop-color="${gold}" stop-opacity="0.02"/></linearGradient>` +
-      `<radialGradient id="sun"><stop offset="0" stop-color="${p.glow}" stop-opacity="0.85"/><stop offset="0.35" stop-color="${gold}" stop-opacity="0.32"/><stop offset="1" stop-color="${gold}" stop-opacity="0"/></radialGradient></defs>`,
-  );
-  parts.push(`<rect width="${w}" height="${h}" fill="url(#bg)"/>`);
+  // Flat colours only, no gradients or glow behind the figures, so the type stays easy to read.
+  parts.push(`<rect width="${w}" height="${h}" fill="${fill}"/>`);
   // The day's baseline, with a notch at each labelled hour.
   parts.push(`<line x1="0" y1="${base}" x2="${w}" y2="${base}" stroke="${p.baseline}" stroke-opacity="0.22" stroke-width="1"/>`);
   for (const hour of HOURS) parts.push(`<line x1="${x(hour * 60).toFixed(1)}" y1="${base}" x2="${x(hour * 60).toFixed(1)}" y2="${base + 4}" stroke="${p.baseline}" stroke-opacity="0.35" stroke-width="1"/>`);
@@ -59,9 +57,10 @@ function backdropSvg(size: Box, curveTop: number, points: SolarPoint[], making: 
     const last = points[points.length - 1];
     const lx = x(last.t).toFixed(1);
     const ly = y(last.v).toFixed(1);
-    if (making) parts.push(`<circle cx="${lx}" cy="${ly}" r="${(h * 0.55).toFixed(1)}" fill="url(#sun)"/>`);
-    parts.push(`<path d="${path} L${lx} ${base} L${x(first.t).toFixed(1)} ${base} Z" fill="url(#area)"/>`);
+    parts.push(`<path d="${path} L${lx} ${base} L${x(first.t).toFixed(1)} ${base} Z" fill="${gold}" fill-opacity="${making ? 0.28 : 0.14}"/>`);
     parts.push(`<path d="${path}" fill="none" stroke="${gold}" stroke-opacity="${making ? 1 : 0.6}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`);
+    // The rest of the day, sketched: a dashed fall from now to the baseline.
+    if (making) parts.push(`<path d="M${lx} ${ly} Q ${x(last.t + 110).toFixed(1)} ${ly} ${x(last.t + 220).toFixed(1)} ${base}" fill="none" stroke="${gold}" stroke-opacity="0.4" stroke-width="2" stroke-dasharray="3 4" stroke-linecap="round"/>`);
     if (making) parts.push(`<circle cx="${lx}" cy="${ly}" r="5" fill="${p.dot}"/><circle cx="${lx}" cy="${ly}" r="5" fill="none" stroke="${gold}" stroke-width="1.5"/>`);
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${parts.join('')}</svg>`;
@@ -95,8 +94,8 @@ function ProductionTile({ solar }: { solar: Solar }) {
   const [curveTop, setCurveTop] = useState<number>();
   const making = solar.power > 0;
   const peakAt = solar.curve.find((pt) => pt.v === solar.peak)?.t;
-  // "4.89 kW" → the number big and light, the unit small and bold.
-  const [value, unit] = formatPower(solar.power).split(' ');
+  // "4.89 kW" → the number big and light, the unit small and bold. At rest, today's energy takes its place.
+  const [value, unit] = making ? formatPower(solar.power).split(' ') : formatEnergy(solar.today).split(' ');
 
   const uri = useMemo(
     () => (size.w && size.h && curveTop !== undefined ? svgUri(backdropSvg({ w: Math.round(size.w), h: Math.round(size.h) }, Math.round(curveTop), solar.curve, making, p)) : undefined),
@@ -120,8 +119,8 @@ function ProductionTile({ solar }: { solar: Solar }) {
       </View>
 
       <View style={[styles.row, { marginTop: 4, alignItems: 'flex-end' }]}>
-        <Text style={[styles.hero, ink, { fontWeight: c.type.hero }]}>{value}</Text>
-        {unit ? <Text style={[styles.unit, ink]}>{unit}</Text> : null}
+        <Text style={[styles.hero, { color: making ? p.text : p.highlight, fontWeight: c.type.hero }]}>{value}</Text>
+        {unit ? <Text style={[styles.unit, ink]}>{making ? unit : `${unit} today`}</Text> : null}
         <View style={{ flex: 1 }} />
         {solar.peak > 0 ? (
           <Text style={[styles.small, soft, { textAlign: 'right' }]}>{`Peak ${formatPower(solar.peak)}${peakAt !== undefined ? `\nat ${clock(peakAt)}` : ''}`}</Text>

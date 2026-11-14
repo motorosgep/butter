@@ -1,11 +1,17 @@
 /** Small, themed building blocks shared by every screen. */
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import createIconSet from '@expo/vector-icons/createIconSet';
 import type { ComponentProps, ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTheme, type ResolvedTheme } from '@/theme';
+
+import { lucideFor } from './icons';
+import lucideGlyphs from './lucide-glyphs.json';
+import { Text } from './text';
 
 export { BUTTER, BUTTER_DARK } from '@/theme';
 
@@ -31,8 +37,17 @@ export function outlineIcon(name: string): string {
   return outline in MaterialCommunityIcons.glyphMap ? outline : name;
 }
 
+/** Lucide line icons, from the bundled font (see icons.ts). */
+const Lucide = createIconSet(lucideGlyphs as Record<string, number>, 'lucide', require('../../assets/fonts/lucide.ttf'));
+
+/**
+ * An icon by its Material Community name, drawn as the matching Lucide line
+ * icon when there is one, so every screen shares the designs' thin strokes.
+ */
 export function Icon({ name, size = 22, color }: { name: string; size?: number; color?: string }) {
   const c = useColors();
+  const lucide = lucideFor(name);
+  if (lucide) return <Lucide name={lucide} size={size} color={color ?? c.text} />;
   return <MaterialCommunityIcons name={name as IconName} size={size} color={color ?? c.text} />;
 }
 
@@ -104,7 +119,7 @@ export function Button({
       {...props}
       style={({ pressed }) => [styles.button, { backgroundColor: bg, opacity: pressed || props.disabled ? 0.6 : 1 }, style]}>
       {busy ? <ActivityIndicator color={textColor} /> : null}
-      {!busy && icon ? <MaterialCommunityIcons name={icon as IconName} size={18} color={textColor} /> : null}
+      {!busy && icon ? <Icon name={icon} size={18} color={textColor} /> : null}
       <Text style={[styles.buttonText, { color: textColor }]}>{title}</Text>
     </Pressable>
   );
@@ -130,7 +145,7 @@ export function Empty({ icon, title, body }: { icon: string; title: string; body
   const c = useColors();
   return (
     <View style={styles.empty}>
-      <MaterialCommunityIcons name={icon as IconName} size={44} color={c.textSecondary} />
+      <Icon name={icon} size={44} color={c.textSecondary} />
       <Heading style={{ marginTop: 12, textAlign: 'center' }}>{title}</Heading>
       {body ? (
         <Body muted style={{ textAlign: 'center', marginTop: 6 }}>

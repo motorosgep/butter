@@ -6,7 +6,8 @@
  */
 
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 
 import { activeAccent, alpha, legibleOn, mix } from '@/lib/cube/appearance';
 import { hasCapability, stateValue } from '@/lib/cube/capabilities';
@@ -14,6 +15,7 @@ import type { Device } from '@/lib/cube/types';
 import type { StateTone } from '@/theme';
 
 import { Icon, Title, cardChrome, useColors } from './ui';
+import { Text } from '@/components/text';
 
 type Status = 'online' | 'connecting' | 'offline' | string;
 
@@ -54,7 +56,7 @@ function chipsFor(devices: Device[], status: Status): Chip[] {
 export function HomeHeader({ hubName, devices, status }: { hubName?: string; devices: Device[]; status: Status }) {
   const c = useColors();
   const now = new Date();
-  const date = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  const date = `${now.toLocaleDateString('en-GB', { weekday: 'long' })}, ${now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}`;
   const chips = chipsFor(devices, status);
   const liveDot = status === 'online' ? c.ok : status === 'connecting' ? c.accent : c.danger;
 
@@ -62,7 +64,7 @@ export function HomeHeader({ hubName, devices, status }: { hubName?: string; dev
     <View style={styles.header}>
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
-          <Text numberOfLines={1} style={[styles.date, { color: c.accent }]}>
+          <Text numberOfLines={1} style={[styles.date, { color: legibleOn(c.accent, c.readingShade) }]}>
             {hubName ? `${date} · ${hubName}` : date}
           </Text>
           <Title style={styles.title}>{greeting(now.getHours())}</Title>
@@ -72,16 +74,17 @@ export function HomeHeader({ hubName, devices, status }: { hubName?: string; dev
           accessibilityLabel="Hubs and settings"
           onPress={() => router.navigate('/settings')}
           style={({ pressed }) => [styles.hubButton, { backgroundColor: c.state.on, opacity: pressed ? 0.75 : 1 }, c.glow ? { boxShadow: `0px 0px 20px ${alpha(c.state.on, c.glow * 0.8)}` } : null]}>
-          <Icon name="home-outline" size={22} color={c.onState} />
+          <Icon name="home-outline" size={22} color={c.onState.on} />
         </Pressable>
       </View>
       <View style={styles.chips}>
         {chips.map((chip) => {
           const tone = chip.tone ? c.state[chip.tone] : undefined;
-          const bg = tone ? mix(c.backgroundElement, tone, c.tint.tile) : c.backgroundElement;
+          const bg = tone ? alpha(tone, c.chipTint.fill) : c.backgroundElement;
+          const edge = tone && c.chipTint.edge ? { borderWidth: StyleSheet.hairlineWidth, borderColor: alpha(tone, c.chipTint.edge) } : null;
           const fg = tone ? legibleOn(mix(tone, c.text, c.tint.label), c.readingShade) : c.text;
           return (
-            <View key={chip.key} style={[styles.chip, cardChrome(c), { backgroundColor: bg, boxShadow: undefined }]}>
+            <View key={chip.key} style={[styles.chip, cardChrome(c), { backgroundColor: bg, boxShadow: undefined }, edge]}>
               {chip.dot ? <View style={[styles.dot, { backgroundColor: liveDot }]} /> : null}
               <Text style={[styles.chipText, { color: fg }]}>{chip.label}</Text>
             </View>

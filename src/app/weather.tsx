@@ -5,7 +5,8 @@
 
 import { Stack, router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+
 
 import { Image } from 'expo-image';
 
@@ -16,6 +17,7 @@ import { mix, temperatureColor } from '@/lib/cube/appearance';
 import { selectActiveHub, useDeviceList, useHub } from '@/lib/hub/store';
 import { refreshForecast, useForecast } from '@/lib/weather/forecast';
 import { compass, dayLabel, describeCode, localHour, placeLabel, searchPlaces, type Forecast, type HourPoint, type Place } from '@/lib/weather/open-meteo';
+import { Text } from '@/components/text';
 
 export default function WeatherScreen() {
   const c = useColors();

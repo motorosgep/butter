@@ -9,7 +9,8 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+
 
 import { roomOf, stateValue } from '@/lib/cube/capabilities';
 import type { Device } from '@/lib/cube/types';
@@ -19,6 +20,7 @@ import { describeCode, localHour, type Forecast } from '@/lib/weather/open-meteo
 import type { Sky, SkyKind } from '@/theme';
 
 import { Body, Card, Heading, Icon, useColors } from './ui';
+import { Text } from '@/components/text';
 
 const OUTDOOR_ROOM = /out(side|door)|garden|balcony|terrace|patio|yard/i;
 
@@ -50,14 +52,9 @@ function svgUri(svg: string): string {
 }
 
 function skySvg(w: number, h: number, sky: Sky, star: string): string {
+  // One flat colour, no gradient or sun glow, so the type on it stays crisp; at night a few stars.
   const parts: string[] = [];
-  parts.push(`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky.top}"/><stop offset="1" stop-color="${sky.bottom}"/></linearGradient>`);
-  if (sky.glow) {
-    parts.push(`<radialGradient id="glow"><stop offset="0" stop-color="${sky.glow[0]}" stop-opacity="${sky.glow[1]}"/><stop offset="0.55" stop-color="${sky.glow[0]}" stop-opacity="${(sky.glow[1] * 0.25).toFixed(2)}"/><stop offset="1" stop-color="${sky.glow[0]}" stop-opacity="0"/></radialGradient>`);
-  }
-  parts.push('</defs>');
-  parts.push(`<rect width="${w}" height="${h}" fill="url(#g)"/>`);
-  if (sky.glow) parts.push(`<circle cx="${(w * 0.84).toFixed(1)}" cy="${(h * 0.22).toFixed(1)}" r="${(h * 0.75).toFixed(1)}" fill="url(#glow)"/>`);
+  parts.push(`<rect width="${w}" height="${h}" fill="${sky.top}"/>`);
   if (sky.stars) {
     // A fixed scatter so the sky does not twinkle on every re-render.
     for (let i = 0; i < 18; i++) {
@@ -79,7 +76,7 @@ export function SkyBackdrop({ code, isDay }: { code: number; isDay: boolean }) {
   const sky = isDay ? kind.day : kind.night;
   const uri = useMemo(() => (size.w && size.h ? svgUri(skySvg(Math.round(size.w), Math.round(size.h), sky, palette.star)) : undefined), [size, sky, palette.star]);
   return (
-    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: sky.bottom }]} onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: sky.top }]} onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       {uri ? <Image source={{ uri }} style={{ width: size.w, height: size.h }} contentFit="fill" /> : null}
     </View>
   );
@@ -154,7 +151,7 @@ function ForecastTile({ forecast, sensor }: { forecast: Forecast; sensor?: numbe
         ) : null}
       </View>
       <View style={[styles.row, { marginTop: 8, alignItems: 'center' }]}>
-        <Icon name={condition.icon} size={52} color={sky.text} />
+        <Icon name={condition.icon} size={52} color={condition.icon === 'weather-sunny' ? sky.sun : sky.text} />
         <Text style={[styles.hero, ink, { fontWeight: c.type.hero }]}>{`${Math.round(current.temperature)}°`}</Text>
         <View style={{ flex: 1 }} />
         <View style={{ alignItems: 'flex-end' }}>

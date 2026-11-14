@@ -1,8 +1,10 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+
 
 import { useHub } from '@/lib/hub/store';
 
 import { useColors } from './ui';
+import { Text } from '@/components/text';
 
 /** One line under the title: shows anything other than "online". */
 export function StatusBanner() {

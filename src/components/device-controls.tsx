@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Switch, View } from 'react-native';
+
 
 import { capitalise, commandFor, controlValue, controls, type Control } from '@/lib/cube/capabilities';
 import type { Device } from '@/lib/cube/types';
@@ -7,6 +8,7 @@ import { useHub } from '@/lib/hub/store';
 
 import { Slider } from './slider';
 import { Body, Button, Card, Chip, Heading, Icon, Row, useColors } from './ui';
+import { Text } from '@/components/text';
 
 export function DeviceControls({ device }: { device: Device }) {
   const list = controls(device);

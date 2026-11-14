@@ -45,6 +45,8 @@ export interface SkyPalette {
   text: string;
   textSoft: string;
   rain: string;
+  /** The sun, when the sky is clear enough to show it. */
+  sun: string;
   /** Pills and chips over the sky. */
   chip: string;
   divider: string;
@@ -79,6 +81,8 @@ export interface SolarPalette {
 export interface Palette {
   text: string;
   textSecondary: string;
+  /** Device names on tiles that are idle: quieter than text, louder than secondary. */
+  tileName: string;
   background: string;
   /** Cards and tiles sitting on the background. */
   backgroundElement: string;
@@ -110,12 +114,19 @@ export interface Palette {
   thumb: string;
   /** Device state colours; colour always means state, never decoration. */
   state: Record<StateTone, string>;
-  /** Icons drawn on a state colour. */
-  onState: string;
+  /** Icons drawn on each state colour: dark on butter, white on the deeper ones. */
+  onState: Record<StateTone, string>;
   /** How strongly something that is on glows around its icon (0 for no glow). */
   glow: number;
   /** How strongly an active tile takes its state colour (0 none, 1 solid), and how much its label does. */
   tint: { tile: number; label: number };
+  /** Status chips with a state: the tint behind the text and, in dark, a coloured edge (0 for none). */
+  chipTint: { fill: number; edge: number };
+  /** Small round buttons sitting on a card, like − and + on a thermostat. */
+  raised: string;
+  /** The floating tab bar and the shadow under it. */
+  tabBar: string;
+  tabShadow: string;
   /** How much reading colours darken toward black to stay legible (0 on dark backgrounds). */
   readingShade: number;
   readings: ReadingColors;
@@ -134,13 +145,12 @@ export interface Shape {
   shadow: 'none' | 'soft' | 'offset';
 }
 
-/** Font family names as loaded by expo-font; undefined uses the system font. */
-export interface ThemeFonts {
-  display?: string;
-  body?: string;
-}
+export type Weight = '300' | '400' | '500' | '600' | '700' | '800' | '900';
 
-type Weight = '300' | '400' | '500' | '600' | '700' | '800' | '900';
+/** The theme's typeface, one loaded font file per weight; none uses the system font. */
+export interface ThemeFonts {
+  family?: Partial<Record<Weight, string>>;
+}
 
 /** How heavy the type is: screen titles, and the big numbers on cards and tiles. */
 export interface ThemeType {

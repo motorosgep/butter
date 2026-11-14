@@ -1,3 +1,12 @@
+import {
+  PlusJakartaSans_300Light,
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+  useFonts,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
@@ -13,13 +22,22 @@ export default function RootLayout() {
   const lookHydrated = useAppearance((s) => s.hydrated);
   const hydrateLook = useAppearance((s) => s.hydrate);
   useSyncSystemScheme();
+  // Butter's typeface. If a file fails to load, screens fall back to the system font rather than wait.
+  const [fontsLoaded, fontError] = useFonts({
+    PlusJakartaSans_300Light,
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+  });
 
   useEffect(() => {
     void hydrate();
     void hydrateLook();
   }, [hydrate, hydrateLook]);
 
-  if (!hydrated || !lookHydrated) {
+  if (!hydrated || !lookHydrated || (!fontsLoaded && !fontError)) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.background }}>
         <ActivityIndicator />

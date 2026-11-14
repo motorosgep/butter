@@ -6,7 +6,8 @@
 
 import { Stack } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+
 
 import { BarChart, LineChart, type Band, type Bar, type Tick, type XY } from '@/components/chart';
 import { Body, Button, Card, Chip, Empty, Heading, Icon, Row, Screen, useColors } from '@/components/ui';
@@ -30,6 +31,7 @@ import {
 } from '@/lib/measurements/odp';
 import type { Place } from '@/lib/weather/open-meteo';
 import { compass } from '@/lib/weather/open-meteo';
+import { Text } from '@/components/text';
 
 type Tab = 'rain' | 'temperature' | 'latest';
 

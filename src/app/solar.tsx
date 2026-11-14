@@ -8,7 +8,8 @@
 
 import { Stack } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+
 
 import { BarChart, LineChart, type Bar, type Tick } from '@/components/chart';
 import { Body, Button, Card, Chip, Empty, Heading, Icon, Row, Screen, useColors } from '@/components/ui';
@@ -16,6 +17,7 @@ import { selectActiveHub, useHub } from '@/lib/hub/store';
 import type { Span } from '@/lib/solar/bridge';
 import { clock, formatEnergy, formatPower, parseSolarLink, solarLinkUrl, type Solar, type SolarLink } from '@/lib/solar/fusionsolar';
 import { refreshHomeSolar, useHomeSolar, useSolarYields, type HomeSolar } from '@/lib/solar/store';
+import { Text } from '@/components/text';
 
 const DAY = 24 * 60;
 const TICKS: Tick[] = [0, 6, 12, 18, 24].map((h) => ({ t: h * 60, label: `${String(h).padStart(2, '0')}:00` }));

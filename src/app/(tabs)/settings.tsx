@@ -11,6 +11,7 @@ import { normaliseAddress } from '@/lib/hub/discovery';
 import { selectActiveHub, useHub, type Hub, type HistoryStatus } from '@/lib/hub/store';
 import { useHomeSolar } from '@/lib/solar/store';
 import { placeLabel } from '@/lib/weather/open-meteo';
+import { TAB_BAR_SPACE } from '@/components/tab-bar';
 
 const REPO = 'https://github.com/motorosgep/butter';
 
@@ -251,7 +252,7 @@ function SolarSettings() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 16, paddingBottom: 40 },
+  content: { padding: 16, paddingBottom: TAB_BAR_SPACE },
   section: { marginTop: 22, marginBottom: 8, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.6, opacity: 0.7 },
   input: { flex: 1, fontSize: 14, paddingVertical: 9, paddingHorizontal: 12, borderRadius: 10 },
 });

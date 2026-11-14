@@ -6,9 +6,11 @@
 
 import { Image } from 'expo-image';
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+
 
 import { useColors } from './ui';
+import { Text } from '@/components/text';
 
 export interface XY {
   t: number;
