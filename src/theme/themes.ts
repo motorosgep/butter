@@ -57,7 +57,7 @@ const SKY: SkyPalette = {
 /** The light scheme's sky: pale and hazy, with dark type, so the tile sits calmly on cream. */
 const SKY_LIGHT: SkyPalette = {
   kinds: {
-    clear: { day: { top: '#BFDDF6', bottom: '#E4F0FA', glow: ['#FFE08A', 0.75] }, night: { top: '#C7CDEB', bottom: '#E0E4F5', glow: ['#FFFFFF', 0.6], stars: true } },
+    clear: { day: { top: '#CFE4F7', bottom: '#E4F0FA', glow: ['#FFE08A', 0.75] }, night: { top: '#C7CDEB', bottom: '#E0E4F5', glow: ['#FFFFFF', 0.6], stars: true } },
     partly: { day: { top: '#CCE0F2', bottom: '#E6EFF8', glow: ['#FFE08A', 0.5] }, night: { top: '#CDD2EA', bottom: '#E3E6F4', glow: ['#FFFFFF', 0.4], stars: true } },
     overcast: { day: { top: '#D5DBE2', bottom: '#E8ECF0' }, night: { top: '#CFD3DC', bottom: '#E2E5EB' } },
     fog: { day: { top: '#DDE1E5', bottom: '#EEF0F2' }, night: { top: '#D6D9DF', bottom: '#E8EAEE' } },

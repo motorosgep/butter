@@ -224,7 +224,8 @@ function ControlBody({ device, accent, wide, c }: { device: Device; accent: Acce
   const setpoint = controls(device).find((x): x is SetpointControl => x.kind === 'setpoint');
   const level = device.online && !climate ? inlineLevel(device, on) : undefined;
   // While heating or cooling the room reading takes the state's colour; idle, the temperature scale's.
-  const currentColor = accentColor ? subColor : climate?.currentColor ? legible(climate.currentColor, c) : c.text;
+  // On light backgrounds the state colour itself, darkened to read; on dark ones its lighter blend with the text.
+  const currentColor = accentColor ? (c.readingShade ? legible(accentColor, c) : subColor) : climate?.currentColor ? legible(climate.currentColor, c) : c.text;
   const nudging = !!setpoint && on !== false && device.online;
   const heroStyle = [styles.hero, styles.heroClimate, { fontWeight: c.type.hero }];
 
