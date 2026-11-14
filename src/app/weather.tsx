@@ -12,7 +12,8 @@ import { Image } from 'expo-image';
 
 import { svgUri } from '@/components/chart';
 import { Body, Button, Card, Empty, Heading, Icon, Row, Screen, useColors } from '@/components/ui';
-import { SkyBackdrop, outdoorReading } from '@/components/weather-tile';
+import { SkyBackdrop } from '@/components/weather-tile';
+import { outdoorReading, useNow } from '@/lib/weather/outdoor';
 import { mix, temperatureColor } from '@/lib/cube/appearance';
 import { selectActiveHub, useDeviceList, useHub } from '@/lib/hub/store';
 import { refreshForecast, useForecast } from '@/lib/weather/forecast';
@@ -175,7 +176,9 @@ function PlacePicker({ current, onPick, onCancel }: { current?: Place; onPick: (
 function ForecastView({ forecast, onChangePlace }: { forecast: Forecast; onChangePlace: () => void }) {
   const c = useColors();
   const devices = useDeviceList();
-  const sensor = outdoorReading(devices);
+  const choice = useHub((s) => selectActiveHub(s)?.outsideSensor);
+  const clock = useNow();
+  const sensor = outdoorReading(devices, choice, clock);
   const { current, hourly, daily, utcOffset } = forecast;
   const condition = describeCode(current.code, current.isDay);
   const tone = (t: number) => (c.readingShade ? mix(temperatureColor(t, c.readings.temperature), '#000000', c.readingShade) : temperatureColor(t, c.readings.temperature));

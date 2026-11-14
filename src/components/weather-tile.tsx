@@ -12,27 +12,14 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 
-import { roomOf, stateValue } from '@/lib/cube/capabilities';
-import type { Device } from '@/lib/cube/types';
 import { selectActiveHub, useDeviceList, useHub } from '@/lib/hub/store';
 import { useForecast } from '@/lib/weather/forecast';
+import { outdoorReading, useNow } from '@/lib/weather/outdoor';
 import { describeCode, localHour, type Forecast } from '@/lib/weather/open-meteo';
 import type { Sky, SkyKind } from '@/theme';
 
 import { Body, Card, Heading, Icon, useColors } from './ui';
 import { Text } from '@/components/text';
-
-const OUTDOOR_ROOM = /out(side|door)|garden|balcony|terrace|patio|yard/i;
-
-/** First online sensor in an outdoor room that reports a temperature. */
-export function outdoorReading(devices: Device[]): number | undefined {
-  for (const d of devices) {
-    if (!d.online || !OUTDOOR_ROOM.test(roomOf(d) ?? '')) continue;
-    const t = stateValue(d.state, 'temperature', 'temperature');
-    if (typeof t === 'number') return t;
-  }
-  return undefined;
-}
 
 // ----- the sky ------------------------------------------------------------------
 
@@ -90,6 +77,7 @@ export function WeatherTile() {
   const devices = useDeviceList();
   const place = hub?.place;
   const { forecast, error, loading } = useForecast(place);
+  const now = useNow();
   if (!hub || place === null) return null;
 
   if (!place) {
@@ -122,7 +110,7 @@ export function WeatherTile() {
     );
   }
 
-  return <ForecastTile forecast={forecast} sensor={outdoorReading(devices)} />;
+  return <ForecastTile forecast={forecast} sensor={outdoorReading(devices, hub.outsideSensor, now)} />;
 }
 
 function ForecastTile({ forecast, sensor }: { forecast: Forecast; sensor?: number }) {

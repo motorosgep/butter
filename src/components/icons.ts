@@ -77,6 +77,8 @@ export const LUCIDE: Record<string, string> = {
   plus: 'plus',
   check: 'check',
   'check-circle': 'circle-check',
+  'radiobox-marked': 'circle-dot',
+  'radiobox-blank': 'circle',
   alert: 'triangle-alert',
   refresh: 'refresh-cw',
   magnify: 'search',

@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { StatusBanner } from '@/components/status-banner';
 import { Body, Button, Card, Chip, Heading, Icon, Row, Screen, Title, useColors } from '@/components/ui';
@@ -237,7 +237,9 @@ function HistorySettings({ hub, status }: { hub: Hub; status: HistoryStatus }) {
 }
 
 function WeatherSettings({ hub }: { hub: Hub }) {
+  const c = useColors();
   const setPlace = useHub((s) => s.setPlace);
+  const sensorName = useHub((s) => (hub.outsideSensor ? (s.devices[hub.outsideSensor]?.name ?? 'a sensor no longer on this hub') : undefined));
   const place = hub.place;
   return (
     <Card style={{ marginTop: 10 }}>
@@ -253,6 +255,16 @@ function WeatherSettings({ hub }: { hub: Hub }) {
           <Button title="Show on Home" variant="secondary" icon="eye-outline" onPress={() => void setPlace(hub.id, undefined)} />
         )}
       </Row>
+      <Pressable accessibilityRole="button" onPress={() => router.push('/outside-sensor')} style={({ pressed }) => [{ marginTop: 14, opacity: pressed ? 0.6 : 1 }]}>
+        <Row>
+          <Icon name="home-thermometer-outline" size={22} color={c.accent} />
+          <View style={{ flex: 1 }}>
+            <Heading style={{ fontSize: 15 }}>Outside sensor</Heading>
+            <Body muted style={{ marginTop: 2 }}>{sensorName ?? 'Automatic'}</Body>
+          </View>
+          <Icon name="chevron-right" size={22} color={c.textSecondary} />
+        </Row>
+      </Pressable>
     </Card>
   );
 }

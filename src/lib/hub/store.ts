@@ -43,6 +43,8 @@ export interface Hub {
   station?: Station | null;
   /** The FusionSolar kiosk link the home's solar figures come from. */
   solar?: SolarLink;
+  /** Serial number of the sensor that gives the "Outside" temperature; unset = Automatic. */
+  outsideSensor?: string;
 }
 
 /** The demo home's weather comes from a real place so the tile has something to show. */
@@ -87,6 +89,8 @@ interface HubState {
   setStation(id: string, station: Station | null | undefined): Promise<void>;
   /** Set or clear the home's solar kiosk link. */
   setSolar(id: string, solar: SolarLink | undefined): Promise<void>;
+  /** Choose the sensor for the "Outside" temperature; `undefined` goes back to Automatic. */
+  setOutsideSensor(id: string, serial: string | undefined): Promise<void>;
   /** Point a hub at a new address (after a router change) and reconnect. */
   setHubAddress(id: string, baseUrl: string): Promise<void>;
   /** Look for the active hub on the network by its device id and adopt its new address. */
@@ -258,6 +262,12 @@ export const useHub = create<HubState>((set, get) => ({
     set({ hubs });
   },
 
+  async setOutsideSensor(id, serial) {
+    const hubs = get().hubs.map((h) => (h.id === id ? { ...h, outsideSensor: serial } : h));
+    await AsyncStorage.setItem(HUBS_KEY, JSON.stringify(hubs));
+    set({ hubs });
+  },
+
   async setHistoryUrl(id, url) {
     const hubs = get().hubs.map((h) => (h.id === id ? { ...h, historyUrl: url?.trim() || undefined } : h));
     await AsyncStorage.setItem(HUBS_KEY, JSON.stringify(hubs));
@@ -342,7 +352,7 @@ function applyEvent(event: CubeEvent, set: (partial: Partial<HubState>) => void,
     case 'device#v2#updateDeviceState': {
       const { endpoint, payload } = event.data as DeviceStateEvent;
       const device = devices[endpoint.serial_number];
-      if (device) set({ devices: { ...devices, [endpoint.serial_number]: { ...device, state: mergeState(device.state, payload) } } });
+      if (device) set({ devices: { ...devices, [endpoint.serial_number]: { ...device, state: mergeState(device.state, stamped(payload)) } } });
       break;
     }
     case 'device#v2#updateDeviceOnline': {
@@ -368,6 +378,12 @@ function applyEvent(event: CubeEvent, set: (partial: Partial<HubState>) => void,
     default:
       break;
   }
+}
+
+/** A live temperature update may leave out `updated_at`; stamp it so the reading's age (Outside sensor) stays true. */
+function stamped(payload: DeviceState): DeviceState {
+  const t = payload.temperature;
+  return t && !('updated_at' in t) ? { ...payload, temperature: { ...t, updated_at: Date.now() } } : payload;
 }
 
 function message(error: unknown): string {
