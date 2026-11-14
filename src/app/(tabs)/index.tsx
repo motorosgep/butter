@@ -3,6 +3,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 
 import { DeviceTile } from '@/components/device-tile';
+import { HeatingTile } from '@/components/heating-tile';
 import { HomeHeader } from '@/components/home-header';
 import { NetworkTile } from '@/components/network-tile';
 import { SolarTile } from '@/components/solar-tile';
@@ -44,6 +45,7 @@ export default function Home() {
         <HomeHeader hubName={hub?.name} devices={devices} status={status} />
         <StatusBanner />
         <WeatherTile />
+        <HeatingTile />
         <SolarTile />
         <NetworkTile />
         {devices.length === 0 && status === 'online' ? (

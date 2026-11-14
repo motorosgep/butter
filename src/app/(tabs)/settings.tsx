@@ -97,6 +97,7 @@ export default function Settings() {
         {hub ? <WeatherSettings hub={hub} /> : null}
 
         {hub ? <SolarSettings /> : null}
+        {hub && !hub.demo ? <HeatingSettings /> : null}
 
 
         {hubs.length > 1 ? (
@@ -283,6 +284,20 @@ function SolarSettings() {
       </Body>
       <Row style={{ marginTop: 10, flexWrap: 'wrap' }}>
         <Button title={available ? 'Open solar' : 'Add solar'} variant="secondary" icon="solar-power-variant" onPress={() => router.push('/solar')} />
+      </Row>
+    </Card>
+  );
+}
+
+function HeatingSettings() {
+  return (
+    <Card style={{ marginTop: 10 }}>
+      <Heading style={{ fontSize: 15 }}>Heating</Heading>
+      <Body muted style={{ marginTop: 4 }}>
+        Room control by the ihost-bridge add-on: it switches the heat pump’s heating on and off from your indoor sensors to hold a target temperature.
+      </Body>
+      <Row style={{ marginTop: 10, flexWrap: 'wrap' }}>
+        <Button title="Open heating" variant="secondary" icon="thermostat" onPress={() => router.push('/heating')} />
       </Row>
     </Card>
   );
