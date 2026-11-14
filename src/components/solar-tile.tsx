@@ -11,7 +11,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type TextStyle } from 'react-native';
 
 
 import { clock, formatEnergy, formatPower, type Solar, type SolarPoint } from '@/lib/solar/fusionsolar';
@@ -119,7 +119,7 @@ function ProductionTile({ solar }: { solar: Solar }) {
       </View>
 
       <View style={[styles.row, { marginTop: 4, alignItems: 'flex-end' }]}>
-        <Text style={[styles.hero, { color: making ? p.text : p.highlight, fontWeight: c.type.hero }]}>{value}</Text>
+        <Hero value={value} color={making ? p.text : p.highlight} weight={c.type.hero} outline={!making && c.shape.borderWidth > 0 ? c.line : undefined} />
         {unit ? <Text style={[styles.unit, ink]}>{making ? unit : `${unit} today`}</Text> : null}
         <View style={{ flex: 1 }} />
         {solar.peak > 0 ? (
@@ -146,6 +146,32 @@ function ProductionTile({ solar }: { solar: Solar }) {
   );
 }
 
+/** Where the outline copies sit: the eight directions round the figure. */
+const OFFSETS = [-1, 0, 1].flatMap((dx) => [-1, 0, 1].map((dy) => [dx, dy])).filter(([dx, dy]) => dx || dy);
+
+/**
+ * The big figure. Hard-edged themes put a bright yellow figure on a pale card,
+ * so there it gets an outline: React Native cannot stroke text, so the outline
+ * is the same text drawn in the line colour, nudged in eight directions behind it.
+ */
+function Hero({ value, color, weight, outline }: { value: string; color: string; weight: TextStyle['fontWeight']; outline?: string }) {
+  const style = [styles.hero, { fontWeight: weight }];
+  return (
+    <View>
+      {outline
+        ? OFFSETS.map(([dx, dy]) => (
+            <Text key={`${dx},${dy}`} aria-hidden style={[...style, styles.outline, { color: outline, transform: [{ translateX: dx * OUTLINE }, { translateY: dy * OUTLINE }] }]}>
+              {value}
+            </Text>
+          ))
+        : null}
+      <Text style={[...style, { color }]}>{value}</Text>
+    </View>
+  );
+}
+
+const OUTLINE = 2;
+
 function Stat({ value, label, strong }: { value: string; label: string; strong?: boolean }) {
   const c = useColors();
   const p = c.solar;
@@ -167,6 +193,7 @@ const styles = StyleSheet.create({
   pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 10, borderRadius: 12 },
   dot: { width: 7, height: 7, borderRadius: 4 },
   pillText: { fontSize: 12, fontWeight: '700' },
+  outline: { position: 'absolute', left: 0, top: 0 },
   hero: { fontSize: 50, letterSpacing: -2, lineHeight: 56, fontVariant: ['tabular-nums'] },
   unit: { fontSize: 18, fontWeight: '700', marginBottom: 9 },
   small: { fontSize: 12, lineHeight: 17, marginBottom: 8, fontVariant: ['tabular-nums'] },
