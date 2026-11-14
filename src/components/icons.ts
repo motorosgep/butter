@@ -43,7 +43,6 @@ export const LUCIDE: Record<string, string> = {
   // weather
   'weather-sunny': 'sun',
   'white-balance-sunny': 'sun',
-  'weather-night': 'moon',
   'weather-partly-cloudy': 'cloud-sun',
   'weather-night-partly-cloudy': 'cloud-moon',
   'weather-cloudy': 'cloud',
@@ -78,7 +77,6 @@ export const LUCIDE: Record<string, string> = {
   plus: 'plus',
   check: 'check',
   'check-circle': 'circle-check',
-  'alert-circle': 'circle-alert',
   alert: 'triangle-alert',
   refresh: 'refresh-cw',
   magnify: 'search',
@@ -102,6 +100,20 @@ export const LUCIDE: Record<string, string> = {
   'molecule-co2': 'wind',
   stop: 'square',
   palette: 'palette',
+  // network
+  speedometer: 'gauge',
+  wifi: 'wifi',
+  'router-wireless': 'router',
+  web: 'globe',
+  ethernet: 'ethernet-port',
+  'cellphone-wireless': 'smartphone',
+  pin: 'pin',
+  'checkbox-marked': 'square-check',
+  'checkbox-blank-outline': 'square',
+  'home-lock': 'house',
+  'weather-night': 'moon',
+  'alert-circle': 'circle-alert',
+  'shield-lock': 'shield-check',
 };
 
 /** The Lucide name for a Material name, ignoring an `-outline` suffix; undefined when there is none. */

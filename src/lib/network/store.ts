@@ -1,13 +1,13 @@
 /**
- * The home network for the screen that shows it: read from the ihost-bridge
- * add-on next to the hub, every 30 seconds while the screen is open (the
- * bridge itself asks the Deco once a minute).
+ * The home network for the Network tab and the Home card: read from the
+ * ihost-bridge add-on next to the hub, every 30 seconds while either is
+ * mounted (the bridge itself asks the Deco once a minute).
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { hubToken, selectActiveHub, useHub } from '../hub/store';
-import { fetchNetwork, NetworkUnavailable, reserve, unreserve, type Network, type ReserveResult } from './bridge';
+import { fetchNetwork, NetworkUnavailable, reserve, runSpeedTest, unreserve, type Network, type ReserveResult, type SpeedResult } from './bridge';
 
 const POLL_MS = 30_000;
 
@@ -22,6 +22,8 @@ export interface NetworkState {
   refresh(): Promise<void>;
   pin(items: { mac: string; ip: string }[]): Promise<ReserveResult>;
   unpin(mac: string): Promise<void>;
+  /** Run a speed test on the hub and wait for its result. */
+  speedTest(): Promise<SpeedResult>;
 }
 
 export function useNetwork(): NetworkState {
@@ -98,5 +100,14 @@ export function useNetwork(): NetworkState {
     [bridgeUrl, refresh, token],
   );
 
-  return { network, error, unavailable: missing ?? unavailable, loading: missing ? false : loading, bridgeUrl, refresh, pin, unpin };
+  const speedTest = useCallback(async () => {
+    if (!bridgeUrl) throw new Error('no bridge');
+    try {
+      return await runSpeedTest(bridgeUrl, await token());
+    } finally {
+      await refresh();
+    }
+  }, [bridgeUrl, refresh, token]);
+
+  return { network, error, unavailable: missing ?? unavailable, loading: missing ? false : loading, bridgeUrl, refresh, pin, unpin, speedTest };
 }

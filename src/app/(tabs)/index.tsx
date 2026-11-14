@@ -4,6 +4,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { DeviceTile } from '@/components/device-tile';
 import { HomeHeader } from '@/components/home-header';
+import { NetworkTile } from '@/components/network-tile';
 import { SolarTile } from '@/components/solar-tile';
 import { StatusBanner } from '@/components/status-banner';
 import { WeatherTile } from '@/components/weather-tile';
@@ -44,6 +45,7 @@ export default function Home() {
         <StatusBanner />
         <WeatherTile />
         <SolarTile />
+        <NetworkTile />
         {devices.length === 0 && status === 'online' ? (
           <Empty icon="home-search" title="No devices yet" body="Pair devices on the hub and they appear here automatically." />
         ) : null}

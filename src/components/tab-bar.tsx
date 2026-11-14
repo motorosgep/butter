@@ -15,7 +15,7 @@ import { Icon, cardChrome, useColors } from './ui';
 /** Icon per tab route, by its file name in src/app/(tabs). */
 const TAB_ICONS: Record<string, string> = {
   index: 'home-outline',
-  security: 'shield-outline',
+  network: 'wifi',
   settings: 'cog-outline',
 };
 

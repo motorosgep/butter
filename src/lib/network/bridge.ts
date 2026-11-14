@@ -45,13 +45,34 @@ export interface Network {
   units: DecoUnit[];
   clients: NetClient[];
   reservations: { items: { mac: string; ip: string }[]; max: number | null };
+  /** Speed tests the bridge runs from the hub (absent on a bridge before 0.4.1). */
+  speedtest?: SpeedTests;
+}
+
+export interface SpeedResult {
+  /** Epoch seconds. */
+  at: number;
+  down_mbps?: number;
+  up_mbps?: number;
+  ping_ms?: number;
+  server?: string;
+  /** Set when the test failed; the figures are then missing. */
+  error?: string;
+}
+
+export interface SpeedTests {
+  last: SpeedResult | null;
+  /** Oldest first, about a week. */
+  history: SpeedResult[];
+  running: boolean;
+  every_hours: number;
 }
 
 /** The bridge answered, but the network pages are not there or not for us. */
 export class NetworkUnavailable extends Error {}
 
-async function call<T>(url: string, token: string, init?: RequestInit): Promise<T> {
-  const signal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal ? AbortSignal.timeout(20_000) : undefined;
+async function call<T>(url: string, token: string, init?: RequestInit, timeoutMs = 20_000): Promise<T> {
+  const signal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal ? AbortSignal.timeout(timeoutMs) : undefined;
   const res = await fetch(url, { ...init, signal, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...init?.headers } });
   // A bridge from before the network pages has no such route.
   if (res.status === 404 && url.endsWith('/api/network')) throw new NetworkUnavailable('the bridge on the hub is too old for the network page; update the add-on');
@@ -74,6 +95,26 @@ export interface ReserveResult {
 /** Pin each MAC to its IP on the Deco. The bridge checks every item before it writes anything. */
 export function reserve(baseUrl: string, token: string, items: { mac: string; ip: string }[]): Promise<ReserveResult> {
   return call<ReserveResult>(`${baseUrl}/api/network/reservations`, token, { method: 'POST', body: JSON.stringify({ items }) });
+}
+
+/** Run a speed test on the hub now and wait for it (10 to 40 seconds; the bridge allows one every two minutes). */
+export function runSpeedTest(baseUrl: string, token: string): Promise<SpeedResult> {
+  return call<{ result: SpeedResult }>(`${baseUrl}/api/network/speedtest`, token, { method: 'POST' }, 160_000).then((r) => r.result);
+}
+
+/** "312" / "48.5" / "8.2": whole numbers from 100 up. */
+export function mbps(value: number | undefined): string {
+  if (value === undefined) return '—';
+  return value >= 100 ? String(Math.round(value)) : value.toFixed(1);
+}
+
+/** "just now", "12 min ago", "3 h ago", "2 days ago". */
+export function ago(epochSeconds: number, now = Date.now()): string {
+  const s = Math.max(0, now / 1000 - epochSeconds);
+  if (s < 90) return 'just now';
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  if (s < 48 * 3600) return `${Math.round(s / 3600)} h ago`;
+  return `${Math.round(s / 86400)} days ago`;
 }
 
 export function unreserve(baseUrl: string, token: string, mac: string): Promise<void> {
