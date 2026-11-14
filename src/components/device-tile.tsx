@@ -16,7 +16,7 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { activeAccent, climateReading, heroReading, INK, isPinned, mix, tileIcon, type Accent, type HeroReading } from '@/lib/cube/appearance';
+import { activeAccent, climateReading, heroReading, isPinned, mix, tileIcon, type Accent, type HeroReading } from '@/lib/cube/appearance';
 import { capitalise, commandFor, controls, controlValue, hasCapability, isControllable, isOn, readouts, stateValue, summary, type Control } from '@/lib/cube/capabilities';
 import type { Device } from '@/lib/cube/types';
 import { useSparkline } from '@/lib/history/sparkline';
@@ -24,17 +24,22 @@ import { useHub } from '@/lib/hub/store';
 
 import { Slider } from './slider';
 import { Sparkline } from './sparkline';
-import { Body, Heading, Icon, useColors } from './ui';
+import { Body, Heading, Icon, cardChrome, useColors } from './ui';
 
 type Palette = ReturnType<typeof useColors>;
 type LevelControl = Extract<Control, { kind: 'level' }>;
 
+/** A reading colour darkened as much as the theme asks, so it reads on a light tile. */
+function legible(color: string, c: Palette): string {
+  return c.readingShade ? mix(color, '#000000', c.readingShade) : color;
+}
+
 export function DeviceTile({ device, wide = false }: { device: Device; wide?: boolean }) {
   const c = useColors();
   const setPinned = useHub((s) => s.setPinned);
-  const hero = useMemo(() => heroReading(device), [device]);
+  const hero = useMemo(() => heroReading(device, c.readings), [device, c.readings]);
   const accent = activeAccent(device);
-  const background = accent ? mix(c.backgroundElement, accent.color, c.scheme === 'dark' ? 0.24 : 0.22) : c.backgroundElement;
+  const background = accent ? mix(c.backgroundElement, c.state[accent.tone], c.tint.tile) : c.backgroundElement;
   const pinned = isPinned(device);
 
   const open = () => router.push({ pathname: '/device/[serial]', params: { serial: device.serial_number } });
@@ -58,6 +63,8 @@ export function DeviceTile({ device, wide = false }: { device: Device; wide?: bo
       style={({ pressed }) => [
         styles.tile,
         wide ? [styles.wide, hero && styles.wideHero] : hero ? styles.heroTile : null,
+        cardChrome(c),
+        { borderRadius: c.shape.cardRadius },
         { backgroundColor: background, opacity: pressed ? 0.8 : device.online ? 1 : 0.55 },
       ]}>
       {hero ? <HeroBody device={device} hero={hero} wide={wide} c={c} /> : <ControlBody device={device} accent={accent} wide={wide} c={c} />}
@@ -70,7 +77,7 @@ export function DeviceTile({ device, wide = false }: { device: Device; wide?: bo
 function HeroBody({ device, hero, wide, c }: { device: Device; hero: HeroReading; wide: boolean; c: Palette }) {
   const history = useHub((s) => s.history);
   const spark = useSparkline(history, device.serial_number, hero.metric, hero.scale);
-  const color = c.scheme === 'dark' ? hero.color : mix(hero.color, '#000000', 0.3);
+  const color = legible(hero.color, c);
   const battery = hero.rest.find((r) => r.key === 'battery');
   const others = hero.rest.filter((r) => !['battery', 'rssi', 'lqi'].includes(r.key));
   const trace = spark && spark.points.length > 1 ? spark : undefined;
@@ -152,10 +159,11 @@ function ControlBody({ device, accent, wide, c }: { device: Device; accent: Acce
   const on = isOn(device);
   const powerCap = hasCapability(device, 'power');
   const canToggle = powerCap !== undefined && isControllable(powerCap) && device.online;
-  const badgeBg = accent ? accent.color : c.backgroundSelected;
-  const badgeFg = accent ? INK : c.textSecondary;
-  const subColor = accent ? mix(accent.color, c.text, c.scheme === 'dark' ? 0.45 : 0.55) : c.textSecondary;
-  const activeColor = accent?.color ?? c.accent;
+  const accentColor = accent ? c.state[accent.tone] : undefined;
+  const badgeBg = accentColor ?? c.backgroundSelected;
+  const badgeFg = accentColor ? c.onState : c.textSecondary;
+  const subColor = accentColor ? mix(accentColor, c.text, c.tint.label) : c.textSecondary;
+  const activeColor = accentColor ?? c.accent;
 
   const powerButton = canToggle ? (
     <Pressable
@@ -165,7 +173,7 @@ function ControlBody({ device, accent, wide, c }: { device: Device; accent: Acce
       accessibilityLabel={`${device.name} power`}
       onPress={() => void control(device.serial_number, { power: { powerState: on ? 'off' : 'on' } }).catch(() => undefined)}
       style={({ pressed }) => [styles.power, { backgroundColor: on ? activeColor : c.backgroundSelected, opacity: pressed ? 0.7 : 1 }]}>
-      <Icon name="power" size={18} color={on ? INK : c.textSecondary} />
+      <Icon name="power" size={18} color={on ? c.onState : c.textSecondary} />
     </Pressable>
   ) : null;
 
@@ -194,9 +202,9 @@ function ControlBody({ device, accent, wide, c }: { device: Device; accent: Acce
     );
   }
 
-  const climate = climateReading(device);
+  const climate = climateReading(device, c.readings);
   const level = device.online ? inlineLevel(device, on) : undefined;
-  const currentColor = climate?.currentColor ? (c.scheme === 'dark' ? climate.currentColor : mix(climate.currentColor, '#000000', 0.3)) : c.text;
+  const currentColor = climate?.currentColor ? legible(climate.currentColor, c) : c.text;
 
   return (
     <>
@@ -283,7 +291,7 @@ function InlineLevel({ device, level, color, c }: { device: Device; level: Level
 }
 
 const styles = StyleSheet.create({
-  tile: { flex: 1, borderRadius: 18, padding: 14, minHeight: 124, justifyContent: 'space-between', overflow: 'hidden' },
+  tile: { flex: 1, padding: 14, minHeight: 124, justifyContent: 'space-between', overflow: 'hidden' },
   heroTile: { minHeight: 140, paddingBottom: 36 },
   wide: { minHeight: 0, justifyContent: 'flex-start' },
   wideHero: { paddingBottom: 30 },

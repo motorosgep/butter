@@ -4,17 +4,22 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { useColors } from '@/components/ui';
 import { useHub } from '@/lib/hub/store';
+import { useAppearance, useSyncSystemScheme } from '@/theme';
 
 export default function RootLayout() {
   const c = useColors();
   const hydrated = useHub((s) => s.hydrated);
   const hydrate = useHub((s) => s.hydrate);
+  const lookHydrated = useAppearance((s) => s.hydrated);
+  const hydrateLook = useAppearance((s) => s.hydrate);
+  useSyncSystemScheme();
 
   useEffect(() => {
     void hydrate();
-  }, [hydrate]);
+    void hydrateLook();
+  }, [hydrate, hydrateLook]);
 
-  if (!hydrated) {
+  if (!hydrated || !lookHydrated) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.background }}>
         <ActivityIndicator />

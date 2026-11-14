@@ -16,7 +16,7 @@ export function StatusBanner() {
       : status === 'unauthorised'
         ? 'The hub no longer accepts this token. Pair again from Settings.'
         : `Hub unreachable${detail ? ` (${detail})` : ''}. Retrying…`;
-  const bg = status === 'connecting' ? c.backgroundSelected : 'rgba(210,59,59,0.14)';
+  const bg = status === 'connecting' ? c.backgroundSelected : c.dangerSoft;
   return (
     <View style={[styles.banner, { backgroundColor: bg }]}>
       <Text style={[styles.text, { color: c.text }]}>{text}</Text>

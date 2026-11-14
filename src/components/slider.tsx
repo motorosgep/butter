@@ -87,7 +87,7 @@ export function Slider({
       {/* children never take the touch, so locationX stays relative to the whole track */}
       <View pointerEvents="none" style={[styles.track, { backgroundColor: trackColor ?? c.backgroundSelected }]} />
       <View pointerEvents="none" style={[styles.track, styles.fill, { backgroundColor: fill, width: x + THUMB / 2 }]} />
-      <View pointerEvents="none" style={[styles.thumb, { left: x, backgroundColor: dragging !== undefined ? fill : '#FFFFFF', borderColor: fill }]} />
+      <View pointerEvents="none" style={[styles.thumb, { left: x, backgroundColor: dragging !== undefined ? fill : c.thumb, borderColor: fill }]} />
     </View>
   );
 }

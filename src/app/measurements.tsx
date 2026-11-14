@@ -33,7 +33,6 @@ import { compass } from '@/lib/weather/open-meteo';
 
 type Tab = 'rain' | 'temperature' | 'latest';
 
-const RAIN = '#4FA3E0';
 const MONTH_INITIALS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
 export default function MeasurementsScreen() {
@@ -144,8 +143,8 @@ function StationPicker({ place, current, onPick, onCancel }: { place?: Place; cu
         {list.map((s) => (
           <Card key={`${s.kind}-${s.id}`} onPress={() => onPick(plainStation(s))}>
             <Row between>
-              <View style={[styles.badge, { backgroundColor: s.kind === 'auto' ? c.accentSoft : 'rgba(79,163,224,0.2)' }]}>
-                <Icon name={s.kind === 'auto' ? 'broadcast' : 'cup-water'} size={20} color={s.kind === 'auto' ? c.accent : RAIN} />
+              <View style={[styles.badge, { backgroundColor: s.kind === 'auto' ? c.accentSoft : c.infoSoft }]}>
+                <Icon name={s.kind === 'auto' ? 'broadcast' : 'cup-water'} size={20} color={s.kind === 'auto' ? c.accent : c.info} />
               </View>
               <View style={{ flex: 1 }}>
                 <Body>{s.name}</Body>
@@ -284,7 +283,7 @@ function RainView({ daily, monthly }: { daily: DailyRow[]; monthly: MonthlyRow[]
       <Heading style={styles.section}>By day</Heading>
       <Card>
         <Nav label={monthLabel(month)} onPrev={month > firstMonth ? () => setMonth(shiftMonth(month, -1)) : undefined} onNext={month < thisMonth ? () => setMonth(shiftMonth(month, 1)) : undefined} />
-        <BarChart bars={dayBars} from={local(y, m - 1, 1)} to={local(y, m, 1)} ticks={dayTicks} color={RAIN} format={(v) => `${Math.round(v)} mm`} height={150} />
+        <BarChart bars={dayBars} from={local(y, m - 1, 1)} to={local(y, m, 1)} ticks={dayTicks} color={c.info} format={(v) => `${Math.round(v)} mm`} height={150} />
         {reported.length ? (
           <Stats
             items={[
@@ -304,7 +303,7 @@ function RainView({ daily, monthly }: { daily: DailyRow[]; monthly: MonthlyRow[]
       <Heading style={styles.section}>By month</Heading>
       <Card>
         <Nav label={year} onPrev={year > firstMonth.slice(0, 4) ? () => setYear(String(Y - 1)) : undefined} onNext={year < thisMonth.slice(0, 4) ? () => setYear(String(Y + 1)) : undefined} />
-        <BarChart bars={monthBars} from={local(Y, 0, 1)} to={local(Y + 1, 0, 1)} ticks={monthTicks} color={RAIN} format={(v) => `${Math.round(v)} mm`} height={150} reference={monthRef} referenceColor={c.accent} />
+        <BarChart bars={monthBars} from={local(Y, 0, 1)} to={local(Y + 1, 0, 1)} ticks={monthTicks} color={c.info} format={(v) => `${Math.round(v)} mm`} height={150} reference={monthRef} referenceColor={c.accent} />
         <Stats
           items={[
             ['Year total', `${yearTotal} mm${yearPartial ? ' so far' : ''}`],
@@ -329,7 +328,7 @@ function RainView({ daily, monthly }: { daily: DailyRow[]; monthly: MonthlyRow[]
               from={local(Number(years[0].year), 0, 1)}
               to={local(Number(years[years.length - 1].year) + 1, 0, 1)}
               ticks={yearTicks}
-              color={RAIN}
+              color={c.info}
               format={(v) => `${Math.round(v)} mm`}
               height={150}
               reference={normalYear !== undefined ? [{ start: local(Number(years[0].year), 0, 1), end: local(Number(years[years.length - 1].year) + 1, 0, 1), v: normalYear }] : undefined}
@@ -482,7 +481,7 @@ function LatestView({ rows }: { rows: HourlyRow[] }) {
         <>
           <Heading style={styles.section}>Rain per hour</Heading>
           <Card>
-            <BarChart bars={rainBars} from={from} to={to} ticks={ticks} color={RAIN} format={(v) => `${v.toFixed(1)} mm`} height={120} />
+            <BarChart bars={rainBars} from={from} to={to} ticks={ticks} color={c.info} format={(v) => `${v.toFixed(1)} mm`} height={120} />
           </Card>
         </>
       ) : null}
@@ -500,7 +499,7 @@ function LatestView({ rows }: { rows: HourlyRow[] }) {
           <View key={r.time} style={styles.tr}>
             <Text style={[styles.td, { color: c.text }]}>{hhmm(r.time)}</Text>
             <Text style={[styles.td, { color: c.text }]}>{r.temp !== undefined ? `${r.temp.toFixed(1)}°` : '–'}</Text>
-            <Text style={[styles.td, { color: (r.rain ?? 0) > 0 ? RAIN : c.textSecondary }]}>{r.rain !== undefined ? `${r.rain.toFixed(1)}` : '–'}</Text>
+            <Text style={[styles.td, { color: (r.rain ?? 0) > 0 ? c.info : c.textSecondary }]}>{r.rain !== undefined ? `${r.rain.toFixed(1)}` : '–'}</Text>
             <Text style={[styles.td, { color: c.text }]}>{r.humidity !== undefined ? `${Math.round(r.humidity)}%` : '–'}</Text>
             <Text style={[styles.td, { color: c.text }]}>{r.wind !== undefined ? `${r.wind.toFixed(1)}${r.gust !== undefined ? `/${r.gust.toFixed(0)}` : ''}` : '–'}</Text>
             <Text style={[styles.td, { color: c.text }]}>{r.seaPressure ?? r.pressure ? `${Math.round((r.seaPressure ?? r.pressure) as number)}` : '–'}</Text>

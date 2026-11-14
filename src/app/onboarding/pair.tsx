@@ -90,7 +90,7 @@ function Step({ n, title, body }: { n: number; title: string; body: string }) {
   return (
     <Row style={{ alignItems: 'flex-start' }}>
       <View style={[styles.badge, { backgroundColor: c.accent }]}>
-        <Body style={{ fontWeight: '700', color: '#1c1c1e' }}>{String(n)}</Body>
+        <Body style={{ fontWeight: '700', color: c.onAccent }}>{String(n)}</Body>
       </View>
       <View style={{ flex: 1 }}>
         <Heading>{title}</Heading>

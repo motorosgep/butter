@@ -41,18 +41,18 @@ function seriesFor(metric: string, c: ReturnType<typeof useColors>): Series | un
     case 'temperature':
       return { key: metric, title: 'Temperature', color: c.accent, format: (v) => `${v.toFixed(1)}°`, scale: 1, minSpan: 2, order: 0 };
     case 'humidity':
-      return { key: metric, title: 'Humidity', color: '#4FA3E0', format: (v) => `${Math.round(v)}%`, scale: 1, minSpan: 10, max: 100, order: 1 };
+      return { key: metric, title: 'Humidity', color: c.series.humidity, format: (v) => `${Math.round(v)}%`, scale: 1, minSpan: 10, max: 100, order: 1 };
     case 'electric-power':
-      return { key: metric, title: 'Power', color: '#F0803C', format: fmtWatts, scale: 0.01, minSpan: 10, zeroBased: true, order: 2 };
+      return { key: metric, title: 'Power', color: c.series.power, format: fmtWatts, scale: 0.01, minSpan: 10, zeroBased: true, order: 2 };
     case 'battery':
-      return { key: metric, title: 'Battery', color: '#4CBB7A', format: (v) => `${Math.round(v)}%`, scale: 1, minSpan: 10, zeroBased: true, max: 100, order: 9 };
+      return { key: metric, title: 'Battery', color: c.series.battery, format: (v) => `${Math.round(v)}%`, scale: 1, minSpan: 10, zeroBased: true, max: 100, order: 9 };
     case 'illumination-level':
     case 'illuminance':
-      return { key: metric, title: 'Light', color: '#E8C547', format: (v) => `${Math.round(v)} lx`, scale: 1, minSpan: 10, zeroBased: true, order: 3 };
+      return { key: metric, title: 'Light', color: c.series.light, format: (v) => `${Math.round(v)} lx`, scale: 1, minSpan: 10, zeroBased: true, order: 3 };
     case 'co2':
-      return { key: metric, title: 'CO₂', color: '#9B7BDA', format: (v) => `${Math.round(v)} ppm`, scale: 1, minSpan: 100, zeroBased: true, order: 4 };
+      return { key: metric, title: 'CO₂', color: c.series.air, format: (v) => `${Math.round(v)} ppm`, scale: 1, minSpan: 100, zeroBased: true, order: 4 };
     case 'pm25':
-      return { key: metric, title: 'PM2.5', color: '#9B7BDA', format: (v) => `${Math.round(v)} µg/m³`, scale: 1, minSpan: 10, zeroBased: true, order: 5 };
+      return { key: metric, title: 'PM2.5', color: c.series.air, format: (v) => `${Math.round(v)} µg/m³`, scale: 1, minSpan: 10, zeroBased: true, order: 5 };
     default:
       return undefined;
   }

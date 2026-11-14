@@ -1,8 +1,12 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 
+import { useColors } from '@/components/ui';
+
 export default function TabLayout() {
+  const c = useColors();
   return (
-    <NativeTabs>
+    // The tab bar stays native; it only takes the theme's colours (the background shows on iOS 18 and earlier, iOS 26 draws glass).
+    <NativeTabs tintColor={c.accent} backgroundColor={c.background}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>

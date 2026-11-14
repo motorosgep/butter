@@ -5,23 +5,21 @@ import type { ComponentProps, ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme, type ResolvedTheme } from '@/theme';
 
-export const BUTTER = '#F2B544';
-export const BUTTER_DARK = '#C98A12';
+export { BUTTER, BUTTER_DARK } from '@/theme';
 
+/** The current theme's colours for the current scheme. Same as `useTheme()`; kept for the many screens that call it. */
 export function useColors() {
-  const scheme: 'light' | 'dark' = useColorScheme() === 'dark' ? 'dark' : 'light';
+  return useTheme();
+}
+
+/** The outline and shadow the theme gives cards and tiles; empty for a flat theme. */
+export function cardChrome(c: ResolvedTheme): ViewStyle {
+  const { borderWidth, shadow } = c.shape;
   return {
-    ...Colors[scheme],
-    scheme,
-    accent: scheme === 'dark' ? BUTTER : BUTTER_DARK,
-    accentSoft: scheme === 'dark' ? 'rgba(242,181,68,0.18)' : 'rgba(242,181,68,0.28)',
-    ok: '#1a9a4a',
-    danger: '#d23b3b',
-    border: scheme === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.08)',
-    gridHex: scheme === 'dark' ? '#FFFFFF' : '#000000',
+    ...(borderWidth ? { borderWidth, borderColor: c.line } : c.cardOutline ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.cardOutline } : null),
+    ...(shadow === 'offset' ? { boxShadow: `4px 4px 0px ${c.line}` } : shadow === 'soft' ? { boxShadow: `0px 1px 2px ${c.shadow}, 0px 6px 18px ${c.shadow}` } : null),
   };
 }
 
@@ -66,7 +64,7 @@ export function Body({ children, muted, style, numberOfLines }: { children: Reac
 
 export function Card({ children, style, onPress }: { children: ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void }) {
   const c = useColors();
-  const base = [styles.card, { backgroundColor: c.backgroundElement }, style];
+  const base = [styles.card, { backgroundColor: c.backgroundElement, borderRadius: c.shape.cardRadius }, cardChrome(c), style];
   if (onPress) {
     return (
       <Pressable onPress={onPress} style={({ pressed }) => [...base, pressed && { opacity: 0.75 }]}>
@@ -91,8 +89,8 @@ export function Button({
 }: PressableProps & { title: string; variant?: 'primary' | 'secondary' | 'danger'; icon?: string; busy?: boolean; style?: StyleProp<ViewStyle> }) {
   const c = useColors();
   const bg = variant === 'primary' ? c.accent : variant === 'danger' ? c.danger : c.backgroundElement;
-  const fg = variant === 'secondary' ? c.text : '#1c1c1e';
-  const textColor = variant === 'danger' ? '#fff' : fg;
+  const fg = variant === 'secondary' ? c.text : c.onAccent;
+  const textColor = variant === 'danger' ? c.onDanger : fg;
   return (
     <Pressable
       accessibilityRole="button"
@@ -117,7 +115,7 @@ export function Chip({ label, selected, onPress }: { label: string; selected?: b
         styles.chip,
         { backgroundColor: selected ? c.accent : c.backgroundSelected, opacity: pressed ? 0.7 : 1 },
       ]}>
-      <Text style={[styles.chipText, { color: selected ? '#1c1c1e' : c.text }]}>{label}</Text>
+      <Text style={[styles.chipText, { color: selected ? c.onAccent : c.text }]}>{label}</Text>
     </Pressable>
   );
 }

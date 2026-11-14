@@ -11,13 +11,14 @@ import { Image } from 'expo-image';
 
 import { svgUri } from '@/components/chart';
 import { Body, Button, Card, Empty, Heading, Icon, Row, Screen, useColors } from '@/components/ui';
-import { SKY_RAIN, SKY_TEXT, SKY_TEXT_SOFT, SkyBackdrop, outdoorReading } from '@/components/weather-tile';
+import { SkyBackdrop, outdoorReading } from '@/components/weather-tile';
 import { mix, temperatureColor } from '@/lib/cube/appearance';
 import { selectActiveHub, useDeviceList, useHub } from '@/lib/hub/store';
 import { refreshForecast, useForecast } from '@/lib/weather/forecast';
 import { compass, dayLabel, describeCode, localHour, placeLabel, searchPlaces, type Forecast, type HourPoint, type Place } from '@/lib/weather/open-meteo';
 
 export default function WeatherScreen() {
+  const c = useColors();
   const hub = useHub(selectActiveHub);
   const setPlace = useHub((s) => s.setPlace);
   const place = hub?.place ?? undefined;
@@ -74,8 +75,8 @@ export default function WeatherScreen() {
         {!picking && place && showMeasurements ? (
           <Card onPress={() => router.push('/measurements')} style={{ marginTop: 16 }}>
             <Row>
-              <View style={styles.linkBadge}>
-                <Icon name="chart-bar" size={22} color="#4FA3E0" />
+              <View style={[styles.linkBadge, { backgroundColor: c.infoSoft }]}>
+                <Icon name="chart-bar" size={22} color={c.info} />
               </View>
               <View style={{ flex: 1 }}>
                 <Heading style={{ fontSize: 15 }}>Measurements</Heading>
@@ -175,8 +176,9 @@ function ForecastView({ forecast, onChangePlace }: { forecast: Forecast; onChang
   const sensor = outdoorReading(devices);
   const { current, hourly, daily, utcOffset } = forecast;
   const condition = describeCode(current.code, current.isDay);
-  const tone = (t: number) => (c.scheme === 'dark' ? temperatureColor(t) : mix(temperatureColor(t), '#000000', 0.3));
-  const rainTint = c.scheme === 'dark' ? SKY_RAIN : '#2F7FC4';
+  const tone = (t: number) => (c.readingShade ? mix(temperatureColor(t, c.readings.temperature), '#000000', c.readingShade) : temperatureColor(t, c.readings.temperature));
+  const rainTint = c.rain;
+  const ink = { color: c.sky.text };
   const today = daily[0];
   // The forecast's own clock keeps this pure; it is at most a quarter hour behind.
   const now = current.time;
@@ -192,16 +194,16 @@ function ForecastView({ forecast, onChangePlace }: { forecast: Forecast; onChang
         <SkyBackdrop code={current.code} isDay={current.isDay} />
         <Row between style={{ alignItems: 'flex-start' }}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.skyPlace}>{placeLabel(forecast.place)}</Text>
+            <Text style={[styles.skyPlace, { color: c.sky.textSoft }]}>{placeLabel(forecast.place)}</Text>
             <Row style={{ marginTop: 6, alignItems: 'center' }}>
-              <Icon name={condition.icon} size={52} color={SKY_TEXT} />
-              <Text style={styles.hero}>{`${Math.round(current.temperature)}°`}</Text>
+              <Icon name={condition.icon} size={52} color={c.sky.text} />
+              <Text style={[styles.hero, ink]}>{`${Math.round(current.temperature)}°`}</Text>
             </Row>
-            <Text style={styles.skyCondition}>{`${condition.label} · feels like ${Math.round(current.feelsLike)}°`}</Text>
+            <Text style={[styles.skyCondition, ink]}>{`${condition.label} · feels like ${Math.round(current.feelsLike)}°`}</Text>
           </View>
-          <Pressable onPress={onChangePlace} accessibilityRole="button" style={({ pressed }) => [styles.change, { opacity: pressed ? 0.6 : 1 }]}>
-            <Icon name="map-marker-outline" size={15} color={SKY_TEXT} />
-            <Text style={styles.changeText}>Change</Text>
+          <Pressable onPress={onChangePlace} accessibilityRole="button" style={({ pressed }) => [styles.change, { backgroundColor: c.sky.chip, opacity: pressed ? 0.6 : 1 }]}>
+            <Icon name="map-marker-outline" size={15} color={c.sky.text} />
+            <Text style={[styles.changeText, ink]}>Change</Text>
           </Pressable>
         </Row>
       </Card>
@@ -354,17 +356,17 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 48 },
   input: { flex: 1, fontSize: 16, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 10 },
   sky: { overflow: 'hidden', paddingVertical: 18 },
-  skyPlace: { fontSize: 13, fontWeight: '600', color: SKY_TEXT_SOFT, letterSpacing: 0.2 },
-  skyCondition: { fontSize: 15, fontWeight: '600', color: SKY_TEXT, marginTop: 2 },
-  hero: { fontSize: 54, fontWeight: '700', letterSpacing: -1.5, lineHeight: 60, color: SKY_TEXT, fontVariant: ['tabular-nums'] },
-  change: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 7, paddingHorizontal: 11, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.18)' },
-  changeText: { fontSize: 13, fontWeight: '600', color: SKY_TEXT },
+  skyPlace: { fontSize: 13, fontWeight: '600', letterSpacing: 0.2 },
+  skyCondition: { fontSize: 15, fontWeight: '600', marginTop: 2 },
+  hero: { fontSize: 54, fontWeight: '700', letterSpacing: -1.5, lineHeight: 60, fontVariant: ['tabular-nums'] },
+  change: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 7, paddingHorizontal: 11, borderRadius: 10 },
+  changeText: { fontSize: 13, fontWeight: '600' },
   tiles: { flexDirection: 'row', gap: 8, marginTop: 8 },
   tile: { flex: 1, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 6, alignItems: 'center', gap: 4 },
   tileValue: { fontSize: 17, fontWeight: '600', fontVariant: ['tabular-nums'] },
   tileLabel: { fontSize: 11 },
   section: { marginTop: 22, marginBottom: 8, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.6, opacity: 0.7 },
-  linkBadge: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(79,163,224,0.18)' },
+  linkBadge: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   col: { width: COL, alignItems: 'center', gap: 4 },
   stripScroll: { marginHorizontal: -16 },
   stripContent: { paddingHorizontal: 16 },

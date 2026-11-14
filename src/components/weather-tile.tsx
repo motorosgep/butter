@@ -16,15 +16,11 @@ import type { Device } from '@/lib/cube/types';
 import { selectActiveHub, useDeviceList, useHub } from '@/lib/hub/store';
 import { useForecast } from '@/lib/weather/forecast';
 import { compass, describeCode, localHour, type Forecast } from '@/lib/weather/open-meteo';
+import type { Sky, SkyKind } from '@/theme';
 
 import { Body, Card, Heading, Icon, useColors } from './ui';
 
 const OUTDOOR_ROOM = /out(side|door)|garden|balcony|terrace|patio|yard/i;
-
-/** Type colours over the sky backdrop, the same in both schemes. */
-export const SKY_TEXT = '#FFFFFF';
-export const SKY_TEXT_SOFT = 'rgba(255,255,255,0.78)';
-export const SKY_RAIN = '#A9D6FF';
 
 /** First online sensor in an outdoor room that reports a temperature. */
 export function outdoorReading(devices: Device[]): number | undefined {
@@ -38,30 +34,22 @@ export function outdoorReading(devices: Device[]): number | undefined {
 
 // ----- the sky ------------------------------------------------------------------
 
-interface Sky {
-  top: string;
-  bottom: string;
-  /** Sun or moon glow colour and strength. */
-  glow?: [string, number];
-  stars?: boolean;
-}
-
-/** Background colours for a WMO weather code, day or night. */
-export function skyFor(code: number, isDay: boolean): Sky {
-  if (code <= 1) return isDay ? { top: '#2B74C9', bottom: '#6FB5E6', glow: ['#FFE39A', 0.95] } : { top: '#0B1230', bottom: '#1F2F5C', glow: ['#E3EAFF', 0.35], stars: true };
-  if (code === 2) return isDay ? { top: '#3A7CC0', bottom: '#8CB9DB', glow: ['#FFE39A', 0.6] } : { top: '#141C3A', bottom: '#2E3D63', glow: ['#E3EAFF', 0.2], stars: true };
-  if (code === 3) return isDay ? { top: '#4B5663', bottom: '#6E7A87' } : { top: '#272D36', bottom: '#3E4650' };
-  if (code === 45 || code === 48) return isDay ? { top: '#5A6671', bottom: '#8C969F' } : { top: '#2A3139', bottom: '#454C55' };
-  if (code >= 95) return isDay ? { top: '#1E2331', bottom: '#3A4154' } : { top: '#101320', bottom: '#262B3A' };
-  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return isDay ? { top: '#4F6F8E', bottom: '#93B0C7' } : { top: '#243245', bottom: '#3C4F66' };
-  return isDay ? { top: '#2C4664', bottom: '#4B6B8C' } : { top: '#141F2E', bottom: '#2A3A50' };
+/** Which sky a WMO weather code paints; the theme holds the colours for each. */
+export function skyKind(code: number): SkyKind {
+  if (code <= 1) return 'clear';
+  if (code === 2) return 'partly';
+  if (code === 3) return 'overcast';
+  if (code === 45 || code === 48) return 'fog';
+  if (code >= 95) return 'storm';
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'snow';
+  return 'rain';
 }
 
 function svgUri(svg: string): string {
   return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
 }
 
-function skySvg(w: number, h: number, sky: Sky): string {
+function skySvg(w: number, h: number, sky: Sky, star: string): string {
   const parts: string[] = [];
   parts.push(`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky.top}"/><stop offset="1" stop-color="${sky.bottom}"/></linearGradient>`);
   if (sky.glow) {
@@ -77,7 +65,7 @@ function skySvg(w: number, h: number, sky: Sky): string {
       const y = ((i * 73.3) % 42) / 100;
       const r = 0.7 + ((i * 7) % 3) * 0.3;
       const o = 0.3 + ((i * 5) % 4) * 0.1;
-      parts.push(`<circle cx="${(x * w).toFixed(1)}" cy="${(y * h).toFixed(1)}" r="${r.toFixed(2)}" fill="#fff" fill-opacity="${o.toFixed(2)}"/>`);
+      parts.push(`<circle cx="${(x * w).toFixed(1)}" cy="${(y * h).toFixed(1)}" r="${r.toFixed(2)}" fill="${star}" fill-opacity="${o.toFixed(2)}"/>`);
     }
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${parts.join('')}</svg>`;
@@ -86,8 +74,10 @@ function skySvg(w: number, h: number, sky: Sky): string {
 /** Fills its parent with the sky for the given weather. The parent needs `overflow: 'hidden'`. */
 export function SkyBackdrop({ code, isDay }: { code: number; isDay: boolean }) {
   const [size, setSize] = useState({ w: 0, h: 0 });
-  const sky = skyFor(code, isDay);
-  const uri = useMemo(() => (size.w && size.h ? svgUri(skySvg(Math.round(size.w), Math.round(size.h), sky)) : undefined), [size, sky]);
+  const palette = useColors().sky;
+  const kind = palette.kinds[skyKind(code)];
+  const sky = isDay ? kind.day : kind.night;
+  const uri = useMemo(() => (size.w && size.h ? svgUri(skySvg(Math.round(size.w), Math.round(size.h), sky, palette.star)) : undefined), [size, sky, palette.star]);
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: sky.bottom }]} onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       {uri ? <Image source={{ uri }} style={{ width: size.w, height: size.h }} contentFit="fill" /> : null}
@@ -139,51 +129,54 @@ export function WeatherTile() {
 }
 
 function ForecastTile({ forecast, sensor }: { forecast: Forecast; sensor?: number }) {
+  const sky = useColors().sky;
   const { current, daily, hourly, utcOffset } = forecast;
   const condition = describeCode(current.code, current.isDay);
   const today = daily[0];
   // The forecast's own clock keeps this pure; it is at most a quarter hour behind.
   const now = current.time;
   const next = hourly.filter((h) => h.time > now).slice(0, 6);
+  const ink = { color: sky.text };
+  const soft = { color: sky.textSoft };
 
   return (
     <Card onPress={() => router.push('/weather')} style={[styles.card, styles.sky]}>
       <SkyBackdrop code={current.code} isDay={current.isDay} />
       <View style={styles.row}>
-        <Text numberOfLines={1} style={[styles.place, { color: SKY_TEXT, flex: 1 }]}>
+        <Text numberOfLines={1} style={[styles.place, ink, { flex: 1 }]}>
           {forecast.place.name}
         </Text>
         {sensor !== undefined ? (
-          <View style={styles.pill}>
-            <Icon name="home-thermometer-outline" size={13} color={SKY_TEXT} />
-            <Text style={styles.pillText}>{`Outside ${sensor.toFixed(1)}°`}</Text>
+          <View style={[styles.pill, { backgroundColor: sky.chip }]}>
+            <Icon name="home-thermometer-outline" size={13} color={sky.text} />
+            <Text style={[styles.pillText, ink]}>{`Outside ${sensor.toFixed(1)}°`}</Text>
           </View>
         ) : null}
       </View>
       <View style={[styles.row, { marginTop: 4, alignItems: 'center' }]}>
-        <Icon name={condition.icon} size={46} color={SKY_TEXT} />
-        <Text style={styles.hero}>{`${Math.round(current.temperature)}°`}</Text>
+        <Icon name={condition.icon} size={46} color={sky.text} />
+        <Text style={[styles.hero, ink]}>{`${Math.round(current.temperature)}°`}</Text>
         <View style={{ flex: 1 }} />
         <View style={{ alignItems: 'flex-end' }}>
-          <Text style={styles.condition}>{condition.label}</Text>
-          {today ? <Text style={styles.small}>{`H ${Math.round(today.max)}°  L ${Math.round(today.min)}°`}</Text> : null}
-          <Text style={styles.small}>{`Feels like ${Math.round(current.feelsLike)}°`}</Text>
+          <Text style={[styles.condition, ink]}>{condition.label}</Text>
+          {today ? <Text style={[styles.small, soft]}>{`H ${Math.round(today.max)}°  L ${Math.round(today.min)}°`}</Text> : null}
+          <Text style={[styles.small, soft]}>{`Feels like ${Math.round(current.feelsLike)}°`}</Text>
         </View>
       </View>
-      <Text numberOfLines={1} style={[styles.small, { marginTop: 2 }]}>
+      <Text numberOfLines={1} style={[styles.small, soft, { marginTop: 2 }]}>
         {`${Math.round(current.humidity)}% humidity · wind ${Math.round(current.windSpeed)} km/h ${compass(current.windDirection)}${today && today.rainChance >= 20 ? ` · ${today.rainChance}% rain today` : ''}`}
       </Text>
       {next.length ? (
-        <View style={styles.hours}>
+        <View style={[styles.hours, { borderTopColor: sky.divider }]}>
           {next.map((h) => {
             const hc = describeCode(h.code, h.isDay);
             const wet = h.rainChance >= 50;
             return (
               <View key={h.time} style={styles.hour}>
-                <Text style={styles.hourLabel}>{`${String(localHour(h.time, utcOffset)).padStart(2, '0')}`}</Text>
-                <Icon name={hc.icon} size={22} color={wet ? SKY_RAIN : SKY_TEXT} />
-                <Text style={styles.hourTemp}>{`${Math.round(h.temperature)}°`}</Text>
-                <Text style={[styles.rain, { color: SKY_RAIN }]}>{h.rainChance >= 30 ? `${h.rainChance}%` : ' '}</Text>
+                <Text style={[styles.hourLabel, soft]}>{`${String(localHour(h.time, utcOffset)).padStart(2, '0')}`}</Text>
+                <Icon name={hc.icon} size={22} color={wet ? sky.rain : sky.text} />
+                <Text style={[styles.hourTemp, ink]}>{`${Math.round(h.temperature)}°`}</Text>
+                <Text style={[styles.rain, { color: sky.rain }]}>{h.rainChance >= 30 ? `${h.rainChance}%` : ' '}</Text>
               </View>
             );
           })}
@@ -194,19 +187,19 @@ function ForecastTile({ forecast, sensor }: { forecast: Forecast; sensor?: numbe
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 18, padding: 14, marginBottom: 18 },
+  card: { padding: 14, marginBottom: 18 },
   sky: { overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   badge: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   place: { fontSize: 13, fontWeight: '600', letterSpacing: 0.2 },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.16)' },
-  pillText: { fontSize: 12, fontWeight: '600', color: SKY_TEXT, fontVariant: ['tabular-nums'] },
-  hero: { fontSize: 48, fontWeight: '700', letterSpacing: -1.2, lineHeight: 54, color: SKY_TEXT, fontVariant: ['tabular-nums'] },
-  condition: { fontSize: 15, fontWeight: '600', color: SKY_TEXT },
-  small: { fontSize: 13, color: SKY_TEXT_SOFT, fontVariant: ['tabular-nums'] },
-  hours: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.25)' },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 10 },
+  pillText: { fontSize: 12, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  hero: { fontSize: 48, fontWeight: '700', letterSpacing: -1.2, lineHeight: 54, fontVariant: ['tabular-nums'] },
+  condition: { fontSize: 15, fontWeight: '600' },
+  small: { fontSize: 13, fontVariant: ['tabular-nums'] },
+  hours: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth },
   hour: { alignItems: 'center', gap: 3, minWidth: 40 },
-  hourLabel: { fontSize: 11, color: SKY_TEXT_SOFT, fontVariant: ['tabular-nums'] },
-  hourTemp: { fontSize: 13, fontWeight: '600', color: SKY_TEXT, fontVariant: ['tabular-nums'] },
+  hourLabel: { fontSize: 11, fontVariant: ['tabular-nums'] },
+  hourTemp: { fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'] },
   rain: { fontSize: 10, fontVariant: ['tabular-nums'] },
 });
