@@ -101,6 +101,7 @@ export const LUCIDE: Record<string, string> = {
   broadcast: 'radio-tower',
   'molecule-co2': 'wind',
   stop: 'square',
+  palette: 'palette',
 };
 
 /** The Lucide name for a Material name, ignoring an `-outline` suffix; undefined when there is none. */

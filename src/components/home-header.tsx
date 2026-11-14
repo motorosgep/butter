@@ -14,7 +14,7 @@ import { hasCapability, stateValue } from '@/lib/cube/capabilities';
 import type { Device } from '@/lib/cube/types';
 import type { StateTone } from '@/theme';
 
-import { Icon, Title, cardChrome, useColors } from './ui';
+import { Icon, Title, caps, cardChrome, useColors } from './ui';
 import { Text } from '@/components/text';
 
 type Status = 'online' | 'connecting' | 'offline' | string;
@@ -67,13 +67,13 @@ export function HomeHeader({ hubName, devices, status }: { hubName?: string; dev
           <Text numberOfLines={1} style={[styles.date, { color: legibleOn(c.accent, c.readingShade) }]}>
             {hubName ? `${date} · ${hubName}` : date}
           </Text>
-          <Title style={styles.title}>{greeting(now.getHours())}</Title>
+          <Title style={[styles.title, caps(c)]}>{greeting(now.getHours())}</Title>
         </View>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Hubs and settings"
           onPress={() => router.navigate('/settings')}
-          style={({ pressed }) => [styles.hubButton, { backgroundColor: c.state.on, opacity: pressed ? 0.75 : 1 }, c.glow ? { boxShadow: `0px 0px 20px ${alpha(c.state.on, c.glow * 0.8)}` } : null]}>
+          style={({ pressed }) => [styles.hubButton, { backgroundColor: c.state.on, opacity: pressed ? 0.75 : 1 }, c.shape.borderWidth ? cardChrome(c) : null, c.glow ? { boxShadow: `0px 0px 20px ${alpha(c.state.on, c.glow * 0.8)}` } : null]}>
           <Icon name="home-outline" size={22} color={c.onState.on} />
         </Pressable>
       </View>
@@ -84,9 +84,9 @@ export function HomeHeader({ hubName, devices, status }: { hubName?: string; dev
           const edge = tone && c.chipTint.edge ? { borderWidth: StyleSheet.hairlineWidth, borderColor: alpha(tone, c.chipTint.edge) } : null;
           const fg = tone ? legibleOn(mix(tone, c.text, c.tint.label), c.readingShade) : c.text;
           return (
-            <View key={chip.key} style={[styles.chip, cardChrome(c), { backgroundColor: bg, boxShadow: undefined }, edge]}>
+            <View key={chip.key} style={[styles.chip, cardChrome(c, false), { backgroundColor: bg }, c.shape.borderWidth ? { borderWidth: 2 } : { boxShadow: undefined }, edge]}>
               {chip.dot ? <View style={[styles.dot, { backgroundColor: liveDot }]} /> : null}
-              <Text style={[styles.chipText, { color: fg }]}>{chip.label}</Text>
+              <Text style={[styles.chipText, caps(c), { color: fg }]}>{chip.label}</Text>
             </View>
           );
         })}

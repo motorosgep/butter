@@ -5,7 +5,7 @@
  * object directly.
  */
 
-export type ThemeId = 'butter';
+export type ThemeId = 'butter' | 'blocks';
 
 /** What the user picked: follow the phone, or force one scheme. */
 export type ColorMode = 'system' | 'light' | 'dark';
@@ -59,6 +59,9 @@ export interface SolarPalette {
   resting: { top: string; bottom: string; fill: string };
   /** The curve and the sun riding on it. */
   gold: string;
+  /** The area under the curve while producing (at rest it is half as strong). */
+  area: string;
+  areaOpacity: number;
   /** Today's energy, the one figure that stands out in the stats row. */
   highlight: string;
   /** The Producing pill and its dot. */
@@ -143,6 +146,10 @@ export interface Shape {
   borderWidth: number;
   /** `soft` blurs, `offset` is a hard shadow in `Palette.line` shifted down-right, `none` is flat. */
   shadow: 'none' | 'soft' | 'offset';
+  /** The round or rounded-square well holding a tile's icon. */
+  well: { radius: number; border: number };
+  /** Draw small value cells (hours, solar stats) as outlined boxes. */
+  boxedCells: boolean;
 }
 
 export type Weight = '300' | '400' | '500' | '600' | '700' | '800' | '900';
@@ -156,6 +163,8 @@ export interface ThemeFonts {
 export interface ThemeType {
   title: Weight;
   hero: Weight;
+  /** Set short labels (chips, states, the greeting) in capitals. */
+  caps: boolean;
 }
 
 export interface Theme {

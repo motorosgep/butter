@@ -5,15 +5,37 @@ import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { StatusBanner } from '@/components/status-banner';
-import { Body, Button, Card, Chip, Heading, Row, Screen, Title, useColors } from '@/components/ui';
+import { Body, Button, Card, Chip, Heading, Icon, Row, Screen, Title, useColors } from '@/components/ui';
 import { defaultHistoryUrl } from '@/lib/history/client';
 import { normaliseAddress } from '@/lib/hub/discovery';
 import { selectActiveHub, useHub, type Hub, type HistoryStatus } from '@/lib/hub/store';
 import { useHomeSolar } from '@/lib/solar/store';
 import { placeLabel } from '@/lib/weather/open-meteo';
 import { TAB_BAR_SPACE } from '@/components/tab-bar';
+import { THEMES, useAppearance } from '@/theme';
 
 const REPO = 'https://github.com/motorosgep/butter';
+
+const MODE_LABEL = { system: 'follows the phone', light: 'always light', dark: 'always dark' } as const;
+
+/** The current look, opening Settings → Appearance. */
+function AppearanceRow() {
+  const c = useColors();
+  const theme = useAppearance((s) => s.theme);
+  const mode = useAppearance((s) => s.mode);
+  return (
+    <Card onPress={() => router.push('/appearance')}>
+      <Row>
+        <Icon name="palette-outline" size={22} color={c.accent} />
+        <View style={{ flex: 1 }}>
+          <Heading>Appearance</Heading>
+          <Body muted style={{ marginTop: 2 }}>{`${THEMES[theme].name}, ${MODE_LABEL[mode]}`}</Body>
+        </View>
+        <Icon name="chevron-right" size={22} color={c.textSecondary} />
+      </Row>
+    </Card>
+  );
+}
 
 export default function Settings() {
   const c = useColors();
@@ -48,6 +70,8 @@ export default function Settings() {
         <Title>Settings</Title>
         <View style={{ height: 14 }} />
         <StatusBanner />
+
+        <AppearanceRow />
 
         <Heading style={styles.section}>Hub</Heading>
         <Card>

@@ -161,12 +161,12 @@ function ForecastTile({ forecast, sensor }: { forecast: Forecast; sensor?: numbe
         </View>
       </View>
       {next.length ? (
-        <View style={[styles.hours, { borderTopColor: sky.divider }]}>
+        <View style={[styles.hours, { borderTopColor: sky.divider }, c.shape.boxedCells ? { borderTopWidth: 0, marginHorizontal: -3 } : null]}>
           {next.map((h) => {
             const hc = describeCode(h.code, h.isDay);
             const wet = h.rainChance >= 30;
             return (
-              <View key={h.time} style={styles.hour}>
+              <View key={h.time} style={[styles.hour, c.shape.boxedCells ? [styles.hourBox, { borderColor: c.line }] : null]}>
                 <Text style={[styles.hourLabel, soft]}>{`${String(localHour(h.time, utcOffset)).padStart(2, '0')}`}</Text>
                 <Icon name={hc.icon} size={20} color={wet ? sky.rain : sky.text} />
                 <Text style={[styles.hourTemp, ink]}>{`${Math.round(h.temperature)}°`}</Text>
@@ -193,6 +193,7 @@ const styles = StyleSheet.create({
   small: { fontSize: 13, lineHeight: 19, fontVariant: ['tabular-nums'] },
   hours: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 14, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
   hour: { alignItems: 'center', gap: 5, minWidth: 36 },
+  hourBox: { flex: 1, minWidth: 0, marginHorizontal: 3, paddingVertical: 6, borderRadius: 10, borderWidth: 2, backgroundColor: 'rgba(255,255,255,0.7)' },
   hourLabel: { fontSize: 12, fontVariant: ['tabular-nums'] },
   hourTemp: { fontSize: 13, fontWeight: '700', fontVariant: ['tabular-nums'] },
   rain: { fontSize: 11, fontWeight: '700', marginTop: -3, fontVariant: ['tabular-nums'] },

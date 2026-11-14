@@ -19,7 +19,7 @@ import { useHomeSolar } from '@/lib/solar/store';
 import type { SolarPalette } from '@/theme';
 
 import { svgUri } from './chart';
-import { Body, Card, useColors } from './ui';
+import { Body, Card, caps, useColors } from './ui';
 import { Text } from '@/components/text';
 
 /** The curve spans the hours the sun can be up, so it fills the tile in winter and summer alike. */
@@ -57,7 +57,7 @@ function backdropSvg(size: Box, curveTop: number, points: SolarPoint[], making: 
     const last = points[points.length - 1];
     const lx = x(last.t).toFixed(1);
     const ly = y(last.v).toFixed(1);
-    parts.push(`<path d="${path} L${lx} ${base} L${x(first.t).toFixed(1)} ${base} Z" fill="${gold}" fill-opacity="${making ? 0.28 : 0.14}"/>`);
+    parts.push(`<path d="${path} L${lx} ${base} L${x(first.t).toFixed(1)} ${base} Z" fill="${p.area}" fill-opacity="${making ? p.areaOpacity : p.areaOpacity / 2}" stroke="${gold}" stroke-opacity="${p.areaOpacity === 1 ? 1 : 0}" stroke-width="2"/>`);
     parts.push(`<path d="${path}" fill="none" stroke="${gold}" stroke-opacity="${making ? 1 : 0.6}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`);
     // The rest of the day, sketched: a dashed fall from now to the baseline.
     if (making) parts.push(`<path d="M${lx} ${ly} Q ${x(last.t + 110).toFixed(1)} ${ly} ${x(last.t + 220).toFixed(1)} ${base}" fill="none" stroke="${gold}" stroke-opacity="0.4" stroke-width="2" stroke-dasharray="3 4" stroke-linecap="round"/>`);
@@ -114,7 +114,7 @@ function ProductionTile({ solar }: { solar: Solar }) {
         </Text>
         <View style={[styles.pill, { backgroundColor: making ? p.pill : p.chip }]}>
           <View style={[styles.dot, { backgroundColor: making ? p.pillDot : p.textSoft }]} />
-          <Text style={[styles.pillText, { color: making ? p.pillText : p.text }]}>{making ? 'Producing' : 'Resting'}</Text>
+          <Text style={[styles.pillText, caps(c), { color: making ? p.pillText : p.text }]}>{making ? 'Producing' : 'Resting'}</Text>
         </View>
       </View>
 
@@ -147,13 +147,14 @@ function ProductionTile({ solar }: { solar: Solar }) {
 }
 
 function Stat({ value, label, strong }: { value: string; label: string; strong?: boolean }) {
-  const p = useColors().solar;
+  const c = useColors();
+  const p = c.solar;
   return (
-    <View style={[styles.stat, { backgroundColor: strong ? p.statStrong : p.stat }]}>
+    <View style={[styles.stat, { backgroundColor: strong ? p.statStrong : p.stat }, c.shape.boxedCells ? { borderWidth: 2, borderColor: c.line } : null]}>
       <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.statValue, { color: strong ? p.highlight : p.text }]}>
         {value}
       </Text>
-      <Text style={[styles.statLabel, { color: p.textSoft }]}>{label}</Text>
+      <Text style={[styles.statLabel, { color: strong ? p.highlight : p.textSoft, opacity: strong ? 0.8 : 1 }]}>{label}</Text>
     </View>
   );
 }

@@ -25,7 +25,7 @@ import { useHub } from '@/lib/hub/store';
 
 import { Slider } from './slider';
 import { Sparkline } from './sparkline';
-import { Icon, cardChrome, outlineIcon, useColors } from './ui';
+import { Icon, caps, cardChrome, outlineIcon, useColors } from './ui';
 import { Text } from '@/components/text';
 
 type Palette = ReturnType<typeof useColors>;
@@ -65,7 +65,7 @@ export function DeviceTile({ device, wide = false }: { device: Device; wide?: bo
       style={({ pressed }) => [
         styles.tile,
         wide ? [styles.wide, hero && styles.wideHero] : hero ? styles.heroTile : null,
-        cardChrome(c),
+        cardChrome(c, !!accent || !!hero),
         { borderRadius: c.shape.cardRadius },
         // Something that is on edges and lights its tile in themes that glow.
         accent && c.glow ? { borderColor: alpha(c.state[accent.tone], 0.4), boxShadow: `0px 0px 24px ${alpha(c.state[accent.tone], c.glow * 0.3)}` } : null,
@@ -170,7 +170,8 @@ function IconWell({ device, accentColor, c }: { device: Device; accentColor: str
   const canToggle = powerCap !== undefined && isControllable(powerCap) && device.online;
   const well = [
     styles.well,
-    { backgroundColor: accentColor ?? c.backgroundSelected },
+    { backgroundColor: accentColor ?? c.backgroundSelected, borderRadius: c.shape.well.radius },
+    c.shape.well.border ? { borderWidth: c.shape.well.border, borderColor: c.line } : null,
     accentColor && c.glow ? { boxShadow: `0px 0px 16px ${alpha(accentColor, c.glow)}` } : null,
   ];
   const accent = activeAccent(device);
@@ -206,7 +207,7 @@ function ControlBody({ device, accent, wide, c }: { device: Device; accent: Acce
           <Text numberOfLines={1} style={[styles.name, { color: accentColor ? c.text : c.tileName }]}>
             {device.name}
           </Text>
-          <Text numberOfLines={1} style={[styles.summary, { color: subColor }]}>
+          <Text numberOfLines={1} style={[styles.summary, caps(c), { color: subColor }]}>
             {summary(device)}
           </Text>
           {brightness !== undefined ? (
@@ -248,7 +249,7 @@ function ControlBody({ device, accent, wide, c }: { device: Device; accent: Acce
             </View>
           ) : null}
           {nudging && climate?.current ? null : (
-            <Text numberOfLines={1} style={[styles.summary, { color: subColor }]}>
+            <Text numberOfLines={1} style={[styles.summary, caps(c), { color: subColor }]}>
               {climate ? climateDetail(device) : summary(device)}
             </Text>
           )}

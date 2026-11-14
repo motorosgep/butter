@@ -20,13 +20,22 @@ export function useColors() {
   return useTheme();
 }
 
-/** The outline and shadow the theme gives cards and tiles; empty for a flat theme. */
-export function cardChrome(c: ResolvedTheme): ViewStyle {
+/**
+ * The outline and shadow the theme gives cards and tiles; empty for a flat
+ * theme. A hard offset shadow lifts only what is `lifted` (coloured blocks),
+ * so idle tiles in such a theme sit flat.
+ */
+export function cardChrome(c: ResolvedTheme, lifted = true): ViewStyle {
   const { borderWidth, shadow } = c.shape;
   return {
     ...(borderWidth ? { borderWidth, borderColor: c.line } : c.cardOutline ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.cardOutline } : null),
-    ...(shadow === 'offset' ? { boxShadow: `4px 4px 0px ${c.line}` } : shadow === 'soft' ? { boxShadow: `0px 1px 2px ${c.shadow}, 0px 6px 18px ${c.shadow}` } : null),
+    ...(shadow === 'offset' ? (lifted ? { boxShadow: `4px 4px 0px ${c.line}` } : null) : shadow === 'soft' ? { boxShadow: `0px 1px 2px ${c.shadow}, 0px 6px 18px ${c.shadow}` } : null),
   };
+}
+
+/** Text transform for short labels: capitals in themes that shout. */
+export function caps(c: ResolvedTheme): TextStyle {
+  return c.type.caps ? { textTransform: 'uppercase' } : {};
 }
 
 export type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];

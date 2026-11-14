@@ -1,3 +1,4 @@
+import { Archivo_500Medium, Archivo_700Bold, Archivo_800ExtraBold, Archivo_900Black } from '@expo-google-fonts/archivo';
 import {
   PlusJakartaSans_300Light,
   PlusJakartaSans_400Regular,
@@ -22,8 +23,12 @@ export default function RootLayout() {
   const lookHydrated = useAppearance((s) => s.hydrated);
   const hydrateLook = useAppearance((s) => s.hydrate);
   useSyncSystemScheme();
-  // Butter's typeface. If a file fails to load, screens fall back to the system font rather than wait.
+  // The themes' typefaces (Plus Jakarta Sans for Butter, Archivo for Bold Blocks). If a file fails to load, screens fall back to the system font rather than wait.
   const [fontsLoaded, fontError] = useFonts({
+    Archivo_500Medium,
+    Archivo_700Bold,
+    Archivo_800ExtraBold,
+    Archivo_900Black,
     PlusJakartaSans_300Light,
     PlusJakartaSans_400Regular,
     PlusJakartaSans_500Medium,
@@ -61,6 +66,7 @@ export default function RootLayout() {
       <Stack.Screen name="weather" options={{ title: 'Weather' }} />
       <Stack.Screen name="measurements" options={{ title: 'Measurements' }} />
       <Stack.Screen name="solar" options={{ title: 'Solar' }} />
+      <Stack.Screen name="appearance" options={{ title: 'Appearance' }} />
     </Stack>
   );
 }

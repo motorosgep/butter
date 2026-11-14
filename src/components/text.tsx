@@ -21,8 +21,10 @@ function normalise(weight: unknown): Weight {
 export function Text({ style, ...props }: TextProps) {
   const { fonts } = useTheme();
   const family = fonts.family;
-  if (!family) return <RNText style={style} {...props} />;
-  const wanted = normalise(StyleSheet.flatten(style)?.fontWeight);
+  const flat = StyleSheet.flatten(style);
+  // No theme typeface, or the caller named a font itself: leave it alone.
+  if (!family || flat?.fontFamily) return <RNText style={style} {...props} />;
+  const wanted = normalise(flat?.fontWeight);
   // The nearest weight the theme ships, preferring heavier when equally near.
   const have = WEIGHTS.filter((w) => family[w]);
   const pick = have.reduce((best, w) => (Math.abs(+w - +wanted) < Math.abs(+best - +wanted) || (Math.abs(+w - +wanted) === Math.abs(+best - +wanted) && +w > +best) ? w : best), have[0]);

@@ -10,7 +10,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { alpha } from '@/lib/cube/appearance';
 
-import { Icon, useColors } from './ui';
+import { Icon, cardChrome, useColors } from './ui';
 
 /** Icon per tab route, by its file name in src/app/(tabs). */
 const TAB_ICONS: Record<string, string> = {
@@ -30,8 +30,10 @@ export function PillTabBar({ state, descriptors, navigation, insets }: BottomTab
         accessibilityRole="tablist"
         style={[
           styles.pill,
-          { backgroundColor: c.tabBar, boxShadow: `0px 8px 28px ${c.tabShadow}` },
-          c.cardOutline ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.cardOutline } : null,
+          { backgroundColor: c.tabBar },
+          // Hard-edged themes give the bar their outline and offset shadow; soft ones a wide blur.
+          c.shape.shadow === 'offset' ? cardChrome(c) : { boxShadow: `0px 8px 28px ${c.tabShadow}` },
+          c.shape.shadow !== 'offset' && c.cardOutline ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.cardOutline } : null,
         ]}>
         {state.routes.map((route, index) => {
           const focused = state.index === index;
@@ -52,6 +54,7 @@ export function PillTabBar({ state, descriptors, navigation, insets }: BottomTab
               style={({ pressed }) => [
                 styles.tab,
                 focused ? { backgroundColor: c.state.on } : null,
+                focused && c.shape.borderWidth ? { borderWidth: 2, borderColor: c.line, borderRadius: c.shape.well.radius } : null,
                 focused && c.glow ? { boxShadow: `0px 0px 16px ${alpha(c.state.on, c.glow * 0.6)}` } : null,
                 { opacity: pressed ? 0.7 : 1 },
               ]}>

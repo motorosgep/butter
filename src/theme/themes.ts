@@ -3,7 +3,7 @@
  * soft shadows in light, midnight blue with glowing butter in dark.
  */
 
-import type { Palette, ReadingColors, SkyPalette, SolarPalette, Theme, ThemeId } from './types';
+import type { Palette, ReadingColors, SkyKind, SkyPalette, SolarPalette, Theme, ThemeId } from './types';
 
 export const BUTTER = '#F2B544';
 export const BUTTER_DARK = '#C98A12';
@@ -79,6 +79,8 @@ const SOLAR_LIGHT: SolarPalette = {
   making: { top: '#FCE3A4', bottom: '#FDF1CF', fill: '#FCE6AE' },
   resting: { top: '#E6E1F0', bottom: '#F3F0F8', fill: '#ECE8F4' },
   gold: BUTTER_DARK,
+  area: BUTTER_DARK,
+  areaOpacity: 0.28,
   highlight: '#7A4E00',
   pill: BUTTER,
   pillText: '#3B2804',
@@ -98,6 +100,8 @@ const SOLAR: SolarPalette = {
   making: { top: '#2A1808', bottom: '#7C4A12', fill: '#5A3610' },
   resting: { top: '#15131F', bottom: '#2D2640', fill: '#221D30' },
   gold: '#FFD27A',
+  area: '#FFD27A',
+  areaOpacity: 0.28,
   highlight: '#FFD27A',
   pill: 'rgba(255,255,255,0.14)',
   pillText: '#FFFFFF',
@@ -188,7 +192,7 @@ const butter: Theme = {
       solar: SOLAR,
     },
   },
-  shape: { cardRadius: 22, borderWidth: 0, shadow: 'soft' },
+  shape: { cardRadius: 22, borderWidth: 0, shadow: 'soft', well: { radius: 19, border: 0 }, boxedCells: false },
   fonts: {
     family: {
       '300': 'PlusJakartaSans_300Light',
@@ -199,10 +203,137 @@ const butter: Theme = {
       '800': 'PlusJakartaSans_800ExtraBold',
     },
   },
-  type: { title: '800', hero: '300' },
+  type: { title: '800', hero: '300', caps: false },
 };
 
-export const THEMES: Record<ThemeId, Theme> = { butter };
+// ----- Bold Blocks ---------------------------------------------------------------
+
+/** Flat, bright skies with black type; night is a deeper periwinkle so the type still reads. */
+function blocksSky(day: Record<SkyKind, string>, night: Record<SkyKind, string>, rain: string): SkyPalette {
+  const kinds = {} as SkyPalette['kinds'];
+  for (const k of Object.keys(day) as SkyKind[]) kinds[k] = { day: { top: day[k], bottom: day[k] }, night: { top: night[k], bottom: night[k], stars: k === 'clear' || k === 'partly' } };
+  return { kinds, text: '#111111', textSoft: 'rgba(17,17,17,0.72)', rain, sun: '#111111', chip: 'rgba(255,255,255,0.8)', divider: 'rgba(17,17,17,0.25)', star: '#111111' };
+}
+
+const BLOCKS_SKY_LIGHT = blocksSky(
+  { clear: '#8FD3FF', partly: '#A6DCFF', overcast: '#C7D1DB', fog: '#D6DCE2', storm: '#9FA9C2', snow: '#D9E9FA', rain: '#86B9EC' },
+  { clear: '#A9B8F2', partly: '#B5C1F0', overcast: '#BCC3D3', fog: '#C9CED8', storm: '#9AA1BD', snow: '#C9D6EE', rain: '#98AEDF' },
+  '#1F3FB0',
+);
+const BLOCKS_SKY_DARK = blocksSky(
+  { clear: '#5AA9DB', partly: '#6DB3DE', overcast: '#97A3B0', fog: '#A5AEB8', storm: '#7B86A3', snow: '#A9C4E2', rain: '#5F95CC' },
+  { clear: '#7F8FD0', partly: '#8B99D2', overcast: '#929AAC', fog: '#9EA5B2', storm: '#737A99', snow: '#9DADD0', rain: '#7186BF' },
+  '#13287A',
+);
+
+function blocksSolar(butter: string, rest: string): SolarPalette {
+  return {
+    making: { top: butter, bottom: butter, fill: butter },
+    resting: { top: rest, bottom: rest, fill: rest },
+    gold: '#111111',
+    area: '#FF8A4C',
+    areaOpacity: 1,
+    highlight: butter,
+    pill: '#111111',
+    pillText: butter,
+    pillDot: butter,
+    stat: 'rgba(255,255,255,0.75)',
+    statStrong: '#111111',
+    glow: butter,
+    dot: '#FFFFFF',
+    text: '#111111',
+    textSoft: 'rgba(17,17,17,0.72)',
+    chip: 'rgba(255,255,255,0.75)',
+    divider: 'rgba(17,17,17,0.25)',
+    baseline: '#111111',
+  };
+}
+
+const BLOCKS_COMMON = {
+  ok: '#1a9a4a',
+  danger: '#E5484D',
+  dangerSoft: 'rgba(229,72,77,0.16)',
+  onDanger: '#FFFFFF',
+  onAccent: '#111111',
+  thumb: '#FFFFFF',
+  shadow: 'transparent',
+  readings: READINGS,
+  series: SERIES,
+  glow: 0,
+  tint: { tile: 1, label: 1 },
+  chipTint: { fill: 1, edge: 0 },
+  onState: { on: '#111111', cool: '#111111', heat: '#111111', fan: '#111111', dry: '#111111', alert: '#111111' },
+} satisfies Partial<Palette>;
+
+const blocks: Theme = {
+  id: 'blocks',
+  name: 'Bold Blocks',
+  description: 'Loud and playful',
+  schemes: {
+    // Butter-cream paper, black outlines and hard shadows, solid colour where something is on.
+    light: {
+      ...BLOCKS_COMMON,
+      text: '#111111',
+      textSecondary: '#555555',
+      tileName: '#111111',
+      background: '#FFF4D6',
+      backgroundElement: '#FFFFFF',
+      backgroundSelected: '#F3E7C6',
+      accent: '#FFC93C',
+      accentSoft: 'rgba(255,201,60,0.35)',
+      info: '#2F5FE0',
+      infoSoft: 'rgba(47,95,224,0.16)',
+      rain: '#2F5FE0',
+      border: 'rgba(17,17,17,0.15)',
+      line: '#111111',
+      gridHex: '#111111',
+      readingShade: 0.35,
+      raised: '#FFFFFF',
+      tabBar: '#FFFFFF',
+      tabShadow: '#111111',
+      state: { on: '#FFC93C', cool: '#8FD3FF', heat: '#FF8A4C', fan: '#7BE0AD', dry: '#7BE0AD', alert: '#FF5C5C' },
+      sky: BLOCKS_SKY_LIGHT,
+      solar: blocksSolar('#FFC93C', '#D8CFF5'),
+    },
+    // Warm charcoal with the same black outlines; the colours a shade deeper so they do not glare.
+    dark: {
+      ...BLOCKS_COMMON,
+      text: '#F3EAD3',
+      textSecondary: '#BDB39C',
+      tileName: '#F3EAD3',
+      background: '#24221D',
+      backgroundElement: '#33302A',
+      backgroundSelected: '#423E36',
+      accent: '#F2B83A',
+      accentSoft: 'rgba(242,184,58,0.25)',
+      info: '#8FB7FF',
+      infoSoft: 'rgba(143,183,255,0.16)',
+      rain: '#8FB7FF',
+      border: 'rgba(255,255,255,0.12)',
+      line: '#050505',
+      gridHex: '#F3EAD3',
+      readingShade: 0,
+      raised: '#423E36',
+      tabBar: '#33302A',
+      tabShadow: '#050505',
+      state: { on: '#F2B83A', cool: '#5AA9DB', heat: '#EE7B42', fan: '#4FBF89', dry: '#4FBF89', alert: '#F05252' },
+      sky: BLOCKS_SKY_DARK,
+      solar: blocksSolar('#F2B83A', '#B8AEDF'),
+    },
+  },
+  shape: { cardRadius: 18, borderWidth: 2.5, shadow: 'offset', well: { radius: 12, border: 2.5 }, boxedCells: true },
+  fonts: {
+    family: {
+      '500': 'Archivo_500Medium',
+      '700': 'Archivo_700Bold',
+      '800': 'Archivo_800ExtraBold',
+      '900': 'Archivo_900Black',
+    },
+  },
+  type: { title: '900', hero: '900', caps: true },
+};
+
+export const THEMES: Record<ThemeId, Theme> = { butter, blocks };
 
 export const DEFAULT_THEME: ThemeId = 'butter';
 
