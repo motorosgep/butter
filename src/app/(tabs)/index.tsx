@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { DeviceTile } from '@/components/device-tile';
+import { HomeHeader } from '@/components/home-header';
 import { SolarTile } from '@/components/solar-tile';
 import { StatusBanner } from '@/components/status-banner';
 import { WeatherTile } from '@/components/weather-tile';
-import { Body, Empty, Heading, Screen, Title, useColors } from '@/components/ui';
+import { Body, Empty, Screen, useColors } from '@/components/ui';
 import { pinnedAt } from '@/lib/cube/appearance';
-import { roomOf } from '@/lib/cube/capabilities';
+import { isOn, roomOf } from '@/lib/cube/capabilities';
 import type { Device } from '@/lib/cube/types';
 import { selectActiveHub, useDeviceList, useHub } from '@/lib/hub/store';
 
@@ -36,10 +37,7 @@ export default function Home() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={c.textSecondary} />}>
-        <Title>{hub?.name ?? 'Home'}</Title>
-        <Body muted style={{ marginTop: 2, marginBottom: 14 }}>
-          {status === 'online' ? `${devices.length} devices · live` : status === 'connecting' ? 'Connecting…' : 'Not connected'}
-        </Body>
+        <HomeHeader hubName={hub?.name} devices={devices} status={status} />
         <StatusBanner />
         <WeatherTile />
         <SolarTile />
@@ -48,7 +46,7 @@ export default function Home() {
         ) : null}
         {favourites.length ? (
           <View style={styles.section}>
-            <Heading style={styles.room}>Favourites</Heading>
+            <RoomHeading title="Favourites" />
             {favourites.map((device) => (
               <View key={device.serial_number} style={styles.gridRow}>
                 <DeviceTile device={device} wide />
@@ -58,7 +56,7 @@ export default function Home() {
         ) : null}
         {sections.map(([room, list]) => (
           <View key={room} style={styles.section}>
-            <Heading style={styles.room}>{room}</Heading>
+            <RoomHeading title={room} devices={list} />
             {chunk(list, 2).map((pair, i) => (
               <View key={i} style={styles.gridRow}>
                 {pair.map((device) => (
@@ -79,6 +77,19 @@ export default function Home() {
   );
 }
 
+/** A room's name over its tiles, with how many of its switchable devices are on. */
+function RoomHeading({ title, devices }: { title: string; devices?: Device[] }) {
+  const c = useColors();
+  const switchable = devices?.filter((d) => isOn(d) !== undefined) ?? [];
+  const on = switchable.filter((d) => isOn(d)).length;
+  return (
+    <View style={styles.roomRow}>
+      <Text style={[styles.room, { color: c.textSecondary }]}>{title}</Text>
+      {switchable.length > 1 ? <Text style={[styles.roomCount, { color: c.textSecondary }]}>{`${on} of ${switchable.length} on`}</Text> : null}
+    </View>
+  );
+}
+
 function groupByRoom(devices: Device[]): [string, Device[]][] {
   const groups = new Map<string, Device[]>();
   for (const d of devices) {
@@ -96,9 +107,11 @@ function chunk<T>(list: T[], size: number): T[][] {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 16, paddingBottom: 40 },
+  content: { padding: 18, paddingBottom: 40 },
   section: { marginBottom: 18 },
-  room: { marginBottom: 10, fontSize: 15, textTransform: 'uppercase', letterSpacing: 0.6, opacity: 0.7 },
+  roomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 10, marginBottom: 10, marginHorizontal: 4 },
+  room: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
+  roomCount: { fontSize: 12, fontWeight: '600' },
   gridRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
   hint: { fontSize: 13, textAlign: 'center', marginTop: 6 },
 });

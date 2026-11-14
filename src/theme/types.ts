@@ -59,6 +59,13 @@ export interface SolarPalette {
   gold: string;
   /** Today's energy, the one figure that stands out in the stats row. */
   highlight: string;
+  /** The Producing pill and its dot. */
+  pill: string;
+  pillText: string;
+  pillDot: string;
+  /** The small boxes under the curve; the first (today) is stronger. */
+  stat: string;
+  statStrong: string;
   glow: string;
   dot: string;
   text: string;
@@ -105,6 +112,8 @@ export interface Palette {
   state: Record<StateTone, string>;
   /** Icons drawn on a state colour. */
   onState: string;
+  /** How strongly something that is on glows around its icon (0 for no glow). */
+  glow: number;
   /** How strongly an active tile takes its state colour (0 none, 1 solid), and how much its label does. */
   tint: { tile: number; label: number };
   /** How much reading colours darken toward black to stay legible (0 on dark backgrounds). */
@@ -131,6 +140,14 @@ export interface ThemeFonts {
   body?: string;
 }
 
+type Weight = '300' | '400' | '500' | '600' | '700' | '800' | '900';
+
+/** How heavy the type is: screen titles, and the big numbers on cards and tiles. */
+export interface ThemeType {
+  title: Weight;
+  hero: Weight;
+}
+
 export interface Theme {
   id: ThemeId;
   name: string;
@@ -139,6 +156,7 @@ export interface Theme {
   schemes: Record<Scheme, Palette>;
   shape: Shape;
   fonts: ThemeFonts;
+  type: ThemeType;
 }
 
 /** A theme with the scheme already chosen: what `useTheme()` returns. */
@@ -147,4 +165,5 @@ export interface ResolvedTheme extends Palette {
   theme: Theme;
   shape: Shape;
   fonts: ThemeFonts;
+  type: ThemeType;
 }

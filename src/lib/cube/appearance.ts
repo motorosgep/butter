@@ -27,6 +27,17 @@ function rgbToHex(r: number, g: number, b: number): string {
   return `#${[r, g, b].map((x) => Math.round(Math.max(0, Math.min(255, x))).toString(16).padStart(2, '0')).join('')}`;
 }
 
+/** A colour darkened toward black by `shade` (0 leaves it alone), so it reads on a light surface. */
+export function legibleOn(color: string, shade: number): string {
+  return shade ? mix(color, '#000000', shade) : color;
+}
+
+/** A hex colour at the given opacity, as rgba(). */
+export function alpha(hex: string, a: number): string {
+  const [r, g, b] = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
 /** Blend two hex colours; k = 0 gives `a`, k = 1 gives `b`. */
 export function mix(a: string, b: string, k: number): string {
   const [r1, g1, b1] = hexToRgb(a);

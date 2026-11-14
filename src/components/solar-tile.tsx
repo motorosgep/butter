@@ -18,7 +18,7 @@ import { useHomeSolar } from '@/lib/solar/store';
 import type { SolarPalette } from '@/theme';
 
 import { svgUri } from './chart';
-import { Body, Card, Icon, useColors } from './ui';
+import { Body, Card, useColors } from './ui';
 
 /** The curve spans the hours the sun can be up, so it fills the tile in winter and summer alike. */
 const DAWN = 4 * 60;
@@ -87,13 +87,16 @@ export function SolarTile() {
 }
 
 function ProductionTile({ solar }: { solar: Solar }) {
-  const p = useColors().solar;
+  const c = useColors();
+  const p = c.solar;
   const ink = { color: p.text };
   const soft = { color: p.textSoft };
   const [size, setSize] = useState<Box>({ w: 0, h: 0 });
   const [curveTop, setCurveTop] = useState<number>();
   const making = solar.power > 0;
-  const peakAt = solar.curve.find((p) => p.v === solar.peak)?.t;
+  const peakAt = solar.curve.find((pt) => pt.v === solar.peak)?.t;
+  // "4.89 kW" → the number big and light, the unit small and bold.
+  const [value, unit] = formatPower(solar.power).split(' ');
 
   const uri = useMemo(
     () => (size.w && size.h && curveTop !== undefined ? svgUri(backdropSvg({ w: Math.round(size.w), h: Math.round(size.h) }, Math.round(curveTop), solar.curve, making, p)) : undefined),
@@ -106,25 +109,22 @@ function ProductionTile({ solar }: { solar: Solar }) {
         {uri ? <Image source={{ uri }} style={{ width: size.w, height: size.h }} contentFit="fill" /> : null}
       </View>
 
-      <View style={styles.row}>
+      <View style={[styles.row, { alignItems: 'center' }]}>
         <Text numberOfLines={1} style={[styles.label, ink, { flex: 1 }]}>
           {solar.name === 'Solar' ? 'Solar' : `Solar · ${solar.name}`}
         </Text>
-        <View style={[styles.pill, { backgroundColor: p.chip }]}>
-          <View style={[styles.dot, { backgroundColor: making ? p.gold : p.textSoft }]} />
-          <Text style={[styles.pillText, ink]}>{making ? 'Producing' : 'Resting'}</Text>
+        <View style={[styles.pill, { backgroundColor: making ? p.pill : p.chip }]}>
+          <View style={[styles.dot, { backgroundColor: making ? p.pillDot : p.textSoft }]} />
+          <Text style={[styles.pillText, { color: making ? p.pillText : p.text }]}>{making ? 'Producing' : 'Resting'}</Text>
         </View>
       </View>
 
-      <View style={[styles.row, { marginTop: 4, alignItems: 'center' }]}>
-        <Icon name={making ? 'solar-power-variant' : 'solar-power-variant-outline'} size={44} color={making ? p.gold : p.text} />
-        <Text style={[styles.hero, ink]}>{formatPower(solar.power)}</Text>
+      <View style={[styles.row, { marginTop: 4, alignItems: 'flex-end' }]}>
+        <Text style={[styles.hero, ink, { fontWeight: c.type.hero }]}>{value}</Text>
+        {unit ? <Text style={[styles.unit, ink]}>{unit}</Text> : null}
         <View style={{ flex: 1 }} />
         {solar.peak > 0 ? (
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={[styles.side, ink]}>{`Peak ${formatPower(solar.peak)}`}</Text>
-            {peakAt !== undefined ? <Text style={[styles.small, soft]}>{`at ${clock(peakAt)}`}</Text> : null}
-          </View>
+          <Text style={[styles.small, soft, { textAlign: 'right' }]}>{`Peak ${formatPower(solar.peak)}${peakAt !== undefined ? `\nat ${clock(peakAt)}` : ''}`}</Text>
         ) : null}
       </View>
 
@@ -137,7 +137,7 @@ function ProductionTile({ solar }: { solar: Solar }) {
         ))}
       </View>
 
-      <View style={[styles.stats, { borderTopColor: p.divider }]}>
+      <View style={styles.stats}>
         <Stat value={formatEnergy(solar.today)} label="Today" strong />
         <Stat value={formatEnergy(solar.month)} label="Month" />
         <Stat value={formatEnergy(solar.year)} label="Year" />
@@ -150,7 +150,7 @@ function ProductionTile({ solar }: { solar: Solar }) {
 function Stat({ value, label, strong }: { value: string; label: string; strong?: boolean }) {
   const p = useColors().solar;
   return (
-    <View style={styles.stat}>
+    <View style={[styles.stat, { backgroundColor: strong ? p.statStrong : p.stat }]}>
       <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.statValue, { color: strong ? p.highlight : p.text }]}>
         {value}
       </Text>
@@ -160,20 +160,20 @@ function Stat({ value, label, strong }: { value: string; label: string; strong?:
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 14, marginBottom: 18 },
+  card: { padding: 18, marginBottom: 12 },
   clip: { overflow: 'hidden' },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  label: { fontSize: 13, fontWeight: '600', letterSpacing: 0.2 },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 3, paddingHorizontal: 9, borderRadius: 10 },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  label: { fontSize: 14, fontWeight: '700' },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 10, borderRadius: 12 },
   dot: { width: 7, height: 7, borderRadius: 4 },
-  pillText: { fontSize: 12, fontWeight: '600' },
-  hero: { fontSize: 44, fontWeight: '700', letterSpacing: -1.2, lineHeight: 54, fontVariant: ['tabular-nums'] },
-  side: { fontSize: 15, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  small: { fontSize: 13, fontVariant: ['tabular-nums'] },
-  curve: { height: CURVE_H, marginHorizontal: -14, marginTop: 2 },
+  pillText: { fontSize: 12, fontWeight: '700' },
+  hero: { fontSize: 50, letterSpacing: -2, lineHeight: 56, fontVariant: ['tabular-nums'] },
+  unit: { fontSize: 18, fontWeight: '700', marginBottom: 9 },
+  small: { fontSize: 12, lineHeight: 17, marginBottom: 8, fontVariant: ['tabular-nums'] },
+  curve: { height: CURVE_H, marginHorizontal: -18, marginTop: 2 },
   hourLabel: { position: 'absolute', bottom: 0, width: 44, marginLeft: -22, textAlign: 'center', fontSize: 11, fontVariant: ['tabular-nums'] },
-  stats: { flexDirection: 'row', marginTop: 10, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth },
-  stat: { flex: 1, alignItems: 'center', gap: 1, paddingHorizontal: 2 },
-  statValue: { fontSize: 15, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  statLabel: { fontSize: 11 },
+  stats: { flexDirection: 'row', gap: 6, marginTop: 12 },
+  stat: { flex: 1, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 8 },
+  statValue: { fontSize: 14, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  statLabel: { fontSize: 11, marginTop: 1 },
 });

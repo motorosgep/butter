@@ -25,6 +25,12 @@ export function cardChrome(c: ResolvedTheme): ViewStyle {
 
 export type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
+/** The outline variant of an icon when the set has one, to match the line-drawn tiles. */
+export function outlineIcon(name: string): string {
+  const outline = `${name}-outline`;
+  return outline in MaterialCommunityIcons.glyphMap ? outline : name;
+}
+
 export function Icon({ name, size = 22, color }: { name: string; size?: number; color?: string }) {
   const c = useColors();
   return <MaterialCommunityIcons name={name as IconName} size={size} color={color ?? c.text} />;
@@ -41,7 +47,7 @@ export function Screen({ children, style, edges }: { children: ReactNode; style?
 
 export function Title({ children, style }: { children: ReactNode; style?: StyleProp<TextStyle> }) {
   const c = useColors();
-  return <Text style={[styles.title, { color: c.text }, style]}>{children}</Text>;
+  return <Text style={[styles.title, { color: c.text, fontWeight: c.type.title }, style]}>{children}</Text>;
 }
 
 export function Heading({ children, style, numberOfLines }: { children: ReactNode; style?: StyleProp<TextStyle>; numberOfLines?: number }) {

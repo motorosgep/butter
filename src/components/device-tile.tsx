@@ -16,7 +16,7 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { activeAccent, climateReading, heroReading, isPinned, mix, tileIcon, type Accent, type HeroReading } from '@/lib/cube/appearance';
+import { activeAccent, alpha, climateReading, heroReading, isPinned, mix, tileIcon, type Accent, type HeroReading } from '@/lib/cube/appearance';
 import { capitalise, commandFor, controls, controlValue, hasCapability, isControllable, isOn, readouts, stateValue, summary, type Control } from '@/lib/cube/capabilities';
 import type { Device } from '@/lib/cube/types';
 import { useSparkline } from '@/lib/history/sparkline';
@@ -24,7 +24,7 @@ import { useHub } from '@/lib/hub/store';
 
 import { Slider } from './slider';
 import { Sparkline } from './sparkline';
-import { Body, Heading, Icon, cardChrome, useColors } from './ui';
+import { Icon, cardChrome, outlineIcon, useColors } from './ui';
 
 type Palette = ReturnType<typeof useColors>;
 type LevelControl = Extract<Control, { kind: 'level' }>;
@@ -65,6 +65,8 @@ export function DeviceTile({ device, wide = false }: { device: Device; wide?: bo
         wide ? [styles.wide, hero && styles.wideHero] : hero ? styles.heroTile : null,
         cardChrome(c),
         { borderRadius: c.shape.cardRadius },
+        // Something that is on edges and lights its tile in themes that glow.
+        accent && c.glow ? { borderColor: alpha(c.state[accent.tone], 0.4), boxShadow: `0px 0px 24px ${alpha(c.state[accent.tone], c.glow * 0.3)}` } : null,
         { backgroundColor: background, opacity: pressed ? 0.8 : device.online ? 1 : 0.55 },
       ]}>
       {hero ? <HeroBody device={device} hero={hero} wide={wide} c={c} /> : <ControlBody device={device} accent={accent} wide={wide} c={c} />}
@@ -93,7 +95,7 @@ function HeroBody({ device, hero, wide, c }: { device: Device; hero: HeroReading
               {device.name}
             </Text>
             <View style={styles.heroRow}>
-              <Text style={[styles.hero, styles.heroWide, { color }]}>{hero.text}</Text>
+              <Text style={[styles.hero, styles.heroWide, { color, fontWeight: c.type.hero }]}>{hero.text}</Text>
               {detail ? (
                 <Text numberOfLines={1} style={[styles.heroSmall, { color: c.textSecondary, flexShrink: 1 }]}>
                   {detail}
@@ -119,7 +121,7 @@ function HeroBody({ device, hero, wide, c }: { device: Device; hero: HeroReading
       </View>
       <View>
         <View style={styles.heroRow}>
-          <Text style={[styles.hero, { color }]}>{hero.text}</Text>
+          <Text style={[styles.hero, { color, fontWeight: c.type.hero }]}>{hero.text}</Text>
           {others[0] ? <Text style={[styles.heroSmall, { color: c.textSecondary }]}>{others[0].value}</Text> : null}
         </View>
         {line ? (
@@ -154,87 +156,133 @@ function batteryIcon(text: string): string {
 
 // ----- control (switchable devices) -------------------------------------------------
 
-function ControlBody({ device, accent, wide, c }: { device: Device; accent: Accent | undefined; wide: boolean; c: Palette }) {
+/**
+ * The round icon at the top of a control tile. It is also the on/off switch:
+ * filled with the state colour while the device is active, and glowing in
+ * themes that glow.
+ */
+function IconWell({ device, accentColor, c }: { device: Device; accentColor: string | undefined; c: Palette }) {
   const control = useHub((s) => s.control);
   const on = isOn(device);
   const powerCap = hasCapability(device, 'power');
   const canToggle = powerCap !== undefined && isControllable(powerCap) && device.online;
-  const accentColor = accent ? c.state[accent.tone] : undefined;
-  const badgeBg = accentColor ?? c.backgroundSelected;
-  const badgeFg = accentColor ? c.onState : c.textSecondary;
-  const subColor = accentColor ? mix(accentColor, c.text, c.tint.label) : c.textSecondary;
-  const activeColor = accentColor ?? c.accent;
-
-  const powerButton = canToggle ? (
+  const well = [
+    styles.well,
+    { backgroundColor: accentColor ?? c.backgroundSelected },
+    accentColor && c.glow ? { boxShadow: `0px 0px 16px ${alpha(accentColor, c.glow)}` } : null,
+  ];
+  const icon = <Icon name={outlineIcon(tileIcon(device, activeAccent(device)))} size={20} color={accentColor ? c.onState : c.textSecondary} />;
+  if (!canToggle) return <View style={well}>{icon}</View>;
+  return (
     <Pressable
-      hitSlop={8}
+      hitSlop={6}
       accessibilityRole="switch"
       accessibilityState={{ checked: on }}
       accessibilityLabel={`${device.name} power`}
       onPress={() => void control(device.serial_number, { power: { powerState: on ? 'off' : 'on' } }).catch(() => undefined)}
-      style={({ pressed }) => [styles.power, { backgroundColor: on ? activeColor : c.backgroundSelected, opacity: pressed ? 0.7 : 1 }]}>
-      <Icon name="power" size={18} color={on ? c.onState : c.textSecondary} />
+      style={({ pressed }) => [...well, { opacity: pressed ? 0.7 : 1 }]}>
+      {icon}
     </Pressable>
-  ) : null;
-
-  const badge = (
-    <View style={[styles.badge, { backgroundColor: badgeBg }]}>
-      <Icon name={tileIcon(device, accent)} size={22} color={badgeFg} />
-    </View>
   );
+}
+
+function ControlBody({ device, accent, wide, c }: { device: Device; accent: Accent | undefined; wide: boolean; c: Palette }) {
+  const on = isOn(device);
+  const accentColor = accent ? c.state[accent.tone] : undefined;
+  const subColor = accentColor ? legible(mix(accentColor, c.text, c.tint.label), c) : c.textSecondary;
+  const activeColor = accentColor ?? c.accent;
+  const brightness = on ? brightnessOf(device) : undefined;
 
   if (!wide) {
     return (
       <>
         <View style={styles.top}>
-          {badge}
-          {powerButton}
+          <IconWell device={device} accentColor={accentColor} c={c} />
         </View>
         <View>
-          <Heading numberOfLines={1} style={styles.name}>
+          <Text numberOfLines={1} style={[styles.name, { color: accentColor ? c.text : c.textSecondary }]}>
             {device.name}
-          </Heading>
-          <Body numberOfLines={1} style={[styles.summary, { color: subColor }]}>
+          </Text>
+          <Text numberOfLines={1} style={[styles.summary, { color: subColor }]}>
             {summary(device)}
-          </Body>
+          </Text>
+          {brightness !== undefined ? (
+            <View style={[styles.bar, { backgroundColor: alpha(activeColor, 0.22) }]}>
+              <View style={[styles.barFill, { width: `${brightness}%`, backgroundColor: legible(activeColor, c) }]} />
+            </View>
+          ) : null}
         </View>
       </>
     );
   }
 
   const climate = climateReading(device, c.readings);
-  const level = device.online ? inlineLevel(device, on) : undefined;
+  const setpoint = controls(device).find((x): x is SetpointControl => x.kind === 'setpoint');
+  const level = device.online && !climate ? inlineLevel(device, on) : undefined;
   const currentColor = climate?.currentColor ? legible(climate.currentColor, c) : c.text;
+  const heroStyle = [styles.hero, styles.heroClimate, { fontWeight: c.type.hero }];
 
   return (
     <>
-      <View style={styles.top}>
-        {badge}
+      <View style={[styles.top, { alignItems: 'center' }]}>
+        <IconWell device={device} accentColor={accentColor} c={c} />
         <View style={styles.wideText}>
-          <Heading numberOfLines={1} style={{ fontSize: 15 }}>
+          <Text numberOfLines={1} style={[styles.name, { marginTop: 0, color: accentColor ? c.text : c.textSecondary }]}>
             {device.name}
-          </Heading>
+          </Text>
           {climate?.current ? (
             <View style={styles.heroRow}>
-              <Text style={[styles.hero, { fontSize: 28, color: currentColor }]}>{climate.current}</Text>
+              <Text style={[...heroStyle, { color: currentColor }]}>{climate.current}</Text>
               {climate.target ? <Text style={[styles.heroSmall, { color: subColor }]}>{climate.target}</Text> : null}
             </View>
           ) : climate?.target ? (
             // No room reading (a heat pump zone, say): the target is the number that matters.
             <View style={styles.heroRow}>
-              <Text style={[styles.hero, { fontSize: 28, color: c.text }]}>{climate.target.replace('→ ', '')}</Text>
+              <Text style={[...heroStyle, { color: c.text }]}>{climate.target.replace('→ ', '')}</Text>
               <Text style={[styles.heroSmall, { color: subColor }]}>target</Text>
             </View>
           ) : null}
-          <Body numberOfLines={1} style={[styles.summary, { color: subColor }]}>
+          <Text numberOfLines={1} style={[styles.summary, { color: subColor }]}>
             {climate ? climateDetail(device) : summary(device)}
-          </Body>
+          </Text>
         </View>
-        {powerButton}
+        {setpoint && on !== false && device.online ? <SetpointButtons device={device} setpoint={setpoint} c={c} tint={subColor} /> : null}
       </View>
       {level ? <InlineLevel device={device} level={level} color={activeColor} c={c} /> : null}
     </>
   );
+}
+
+type SetpointControl = Extract<Control, { kind: 'setpoint' }>;
+
+/** − and + for a climate device's target, a step at a time. */
+function SetpointButtons({ device, setpoint, c, tint }: { device: Device; setpoint: SetpointControl; c: Palette; tint: string }) {
+  const control = useHub((s) => s.control);
+  const current = Number(controlValue(device, setpoint));
+  const nudge = (dir: number) => {
+    if (!Number.isFinite(current)) return;
+    const next = Math.min(setpoint.max, Math.max(setpoint.min, Math.round((current + dir * setpoint.step) * 10) / 10));
+    if (next !== current) void control(device.serial_number, commandFor(setpoint, next)).catch(() => undefined);
+  };
+  const button = [styles.round, { backgroundColor: c.backgroundElement }, c.cardOutline ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.cardOutline } : null];
+  return (
+    <View style={styles.roundRow}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Lower ${device.name} target`} onPress={() => nudge(-1)} style={({ pressed }) => [...button, { opacity: pressed ? 0.6 : 1 }]}>
+        <Icon name="minus" size={22} color={tint} />
+      </Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Raise ${device.name} target`} onPress={() => nudge(1)} style={({ pressed }) => [...button, { opacity: pressed ? 0.6 : 1 }]}>
+        <Icon name="plus" size={22} color={tint} />
+      </Pressable>
+    </View>
+  );
+}
+
+/** A light's brightness in percent, for the bar under its name. */
+function brightnessOf(device: Device): number | undefined {
+  const level = controls(device).find((x): x is LevelControl => x.kind === 'level' && x.capability === 'brightness');
+  if (!level) return undefined;
+  const v = Number(controlValue(device, level));
+  return Number.isFinite(v) ? Math.max(4, Math.min(100, ((v - level.min) / (level.max - level.min)) * 100)) : undefined;
 }
 
 /** The one slider a wide tile shows: brightness while the light is on, else position, else colour temperature. */
@@ -291,21 +339,25 @@ function InlineLevel({ device, level, color, c }: { device: Device; level: Level
 }
 
 const styles = StyleSheet.create({
-  tile: { flex: 1, padding: 14, minHeight: 124, justifyContent: 'space-between', overflow: 'hidden' },
+  tile: { flex: 1, padding: 14, minHeight: 116, justifyContent: 'space-between', overflow: 'hidden' },
   heroTile: { minHeight: 140, paddingBottom: 36 },
   wide: { minHeight: 0, justifyContent: 'flex-start' },
   wideHero: { paddingBottom: 30 },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  badge: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  power: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
-  name: { marginTop: 14, fontSize: 15 },
-  summary: { fontSize: 13, marginTop: 2 },
+  well: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  name: { fontSize: 13, fontWeight: '600' },
+  summary: { fontSize: 12, marginTop: 2 },
+  bar: { height: 4, borderRadius: 2, marginTop: 8, overflow: 'hidden' },
+  barFill: { height: 4, borderRadius: 2 },
+  round: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  roundRow: { flexDirection: 'row', gap: 8 },
   wideText: { flex: 1, marginLeft: 12, marginRight: 10 },
-  label: { fontSize: 12, fontWeight: '600', letterSpacing: 0.2 },
+  label: { fontSize: 13, fontWeight: '600' },
   heroRow: { flexDirection: 'row', alignItems: 'baseline', gap: 7, marginTop: 6 },
-  hero: { fontSize: 32, fontWeight: '700', letterSpacing: -0.8, lineHeight: 36, fontVariant: ['tabular-nums'] },
+  hero: { fontSize: 32, letterSpacing: -0.8, lineHeight: 38, fontVariant: ['tabular-nums'] },
+  heroClimate: { fontSize: 26, lineHeight: 32 },
   heroWide: { fontSize: 34 },
-  heroSmall: { fontSize: 14, fontWeight: '600' },
+  heroSmall: { fontSize: 13, fontWeight: '600' },
   kv: { fontSize: 12, marginTop: 4, fontVariant: ['tabular-nums'] },
   small: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   smallText: { fontSize: 12, fontVariant: ['tabular-nums'] },

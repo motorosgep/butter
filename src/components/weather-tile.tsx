@@ -15,7 +15,7 @@ import { roomOf, stateValue } from '@/lib/cube/capabilities';
 import type { Device } from '@/lib/cube/types';
 import { selectActiveHub, useDeviceList, useHub } from '@/lib/hub/store';
 import { useForecast } from '@/lib/weather/forecast';
-import { compass, describeCode, localHour, type Forecast } from '@/lib/weather/open-meteo';
+import { describeCode, localHour, type Forecast } from '@/lib/weather/open-meteo';
 import type { Sky, SkyKind } from '@/theme';
 
 import { Body, Card, Heading, Icon, useColors } from './ui';
@@ -129,7 +129,8 @@ export function WeatherTile() {
 }
 
 function ForecastTile({ forecast, sensor }: { forecast: Forecast; sensor?: number }) {
-  const sky = useColors().sky;
+  const c = useColors();
+  const sky = c.sky;
   const { current, daily, hourly, utcOffset } = forecast;
   const condition = describeCode(current.code, current.isDay);
   const today = daily[0];
@@ -142,41 +143,37 @@ function ForecastTile({ forecast, sensor }: { forecast: Forecast; sensor?: numbe
   return (
     <Card onPress={() => router.push('/weather')} style={[styles.card, styles.sky]}>
       <SkyBackdrop code={current.code} isDay={current.isDay} />
-      <View style={styles.row}>
+      <View style={[styles.row, { alignItems: 'center' }]}>
         <Text numberOfLines={1} style={[styles.place, ink, { flex: 1 }]}>
           {forecast.place.name}
         </Text>
         {sensor !== undefined ? (
           <View style={[styles.pill, { backgroundColor: sky.chip }]}>
-            <Icon name="home-thermometer-outline" size={13} color={sky.text} />
             <Text style={[styles.pillText, ink]}>{`Outside ${sensor.toFixed(1)}°`}</Text>
           </View>
         ) : null}
       </View>
-      <View style={[styles.row, { marginTop: 4, alignItems: 'center' }]}>
-        <Icon name={condition.icon} size={46} color={sky.text} />
-        <Text style={[styles.hero, ink]}>{`${Math.round(current.temperature)}°`}</Text>
+      <View style={[styles.row, { marginTop: 8, alignItems: 'center' }]}>
+        <Icon name={condition.icon} size={52} color={sky.text} />
+        <Text style={[styles.hero, ink, { fontWeight: c.type.hero }]}>{`${Math.round(current.temperature)}°`}</Text>
         <View style={{ flex: 1 }} />
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={[styles.condition, ink]}>{condition.label}</Text>
-          {today ? <Text style={[styles.small, soft]}>{`H ${Math.round(today.max)}°  L ${Math.round(today.min)}°`}</Text> : null}
+          {today ? <Text style={[styles.small, ink]}>{`H ${Math.round(today.max)}° · L ${Math.round(today.min)}°`}</Text> : null}
           <Text style={[styles.small, soft]}>{`Feels like ${Math.round(current.feelsLike)}°`}</Text>
         </View>
       </View>
-      <Text numberOfLines={1} style={[styles.small, soft, { marginTop: 2 }]}>
-        {`${Math.round(current.humidity)}% humidity · wind ${Math.round(current.windSpeed)} km/h ${compass(current.windDirection)}${today && today.rainChance >= 20 ? ` · ${today.rainChance}% rain today` : ''}`}
-      </Text>
       {next.length ? (
         <View style={[styles.hours, { borderTopColor: sky.divider }]}>
           {next.map((h) => {
             const hc = describeCode(h.code, h.isDay);
-            const wet = h.rainChance >= 50;
+            const wet = h.rainChance >= 30;
             return (
               <View key={h.time} style={styles.hour}>
                 <Text style={[styles.hourLabel, soft]}>{`${String(localHour(h.time, utcOffset)).padStart(2, '0')}`}</Text>
-                <Icon name={hc.icon} size={22} color={wet ? sky.rain : sky.text} />
+                <Icon name={hc.icon} size={20} color={wet ? sky.rain : sky.text} />
                 <Text style={[styles.hourTemp, ink]}>{`${Math.round(h.temperature)}°`}</Text>
-                <Text style={[styles.rain, { color: sky.rain }]}>{h.rainChance >= 30 ? `${h.rainChance}%` : ' '}</Text>
+                {wet ? <Text style={[styles.rain, { color: sky.rain }]}>{`${h.rainChance}%`}</Text> : null}
               </View>
             );
           })}
@@ -187,19 +184,19 @@ function ForecastTile({ forecast, sensor }: { forecast: Forecast; sensor?: numbe
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 14, marginBottom: 18 },
+  card: { padding: 18, marginBottom: 12 },
   sky: { overflow: 'hidden' },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   badge: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  place: { fontSize: 13, fontWeight: '600', letterSpacing: 0.2 },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 10 },
+  place: { fontSize: 14, fontWeight: '700' },
+  pill: { paddingVertical: 5, paddingHorizontal: 10, borderRadius: 12 },
   pillText: { fontSize: 12, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  hero: { fontSize: 48, fontWeight: '700', letterSpacing: -1.2, lineHeight: 54, fontVariant: ['tabular-nums'] },
-  condition: { fontSize: 15, fontWeight: '600' },
-  small: { fontSize: 13, fontVariant: ['tabular-nums'] },
-  hours: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth },
-  hour: { alignItems: 'center', gap: 3, minWidth: 40 },
-  hourLabel: { fontSize: 11, fontVariant: ['tabular-nums'] },
-  hourTemp: { fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  rain: { fontSize: 10, fontVariant: ['tabular-nums'] },
+  hero: { fontSize: 64, letterSpacing: -3, lineHeight: 70, fontVariant: ['tabular-nums'] },
+  condition: { fontSize: 15, fontWeight: '700' },
+  small: { fontSize: 13, lineHeight: 19, fontVariant: ['tabular-nums'] },
+  hours: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 14, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
+  hour: { alignItems: 'center', gap: 5, minWidth: 36 },
+  hourLabel: { fontSize: 12, fontVariant: ['tabular-nums'] },
+  hourTemp: { fontSize: 13, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  rain: { fontSize: 11, fontWeight: '700', marginTop: -3, fontVariant: ['tabular-nums'] },
 });

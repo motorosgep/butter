@@ -14,5 +14,5 @@ export function useTheme(): ResolvedTheme {
   const phone = useColorScheme();
   const scheme: Scheme = mode === 'system' ? (phone === 'dark' ? 'dark' : 'light') : mode;
   const theme = THEMES[id] ?? THEMES[DEFAULT_THEME];
-  return useMemo(() => ({ ...theme.schemes[scheme], scheme, theme, shape: theme.shape, fonts: theme.fonts }), [theme, scheme]);
+  return useMemo(() => ({ ...theme.schemes[scheme], scheme, theme, shape: theme.shape, fonts: theme.fonts, type: theme.type }), [theme, scheme]);
 }
