@@ -1,14 +1,14 @@
 /**
  * The home network at a glance, as a wide tile on Home: whether the internet
- * is up, the last speed test the bridge ran from the hub, and each Deco with
+ * is up, the traffic right now (as the Deco reports it), and each Deco with
  * how many devices it is serving. Shown only when the ihost-bridge add-on
- * reads a Deco; tapping opens the Network tab.
+ * reads a Deco; tapping opens the traffic page.
  */
 
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { ago, mbps, type Network } from '@/lib/network/bridge';
+import { mbps, type Network } from '@/lib/network/bridge';
 import { useNetwork } from '@/lib/network/store';
 
 import { Text } from './text';
@@ -23,20 +23,12 @@ export function NetworkTile() {
 function Glance({ network }: { network: Network }) {
   const c = useColors();
   const up = network.internet?.online;
-  const last = network.speedtest?.last;
-  const running = network.speedtest?.running;
-  const tested = last && !last.error;
+  const now = network.traffic_now;
   const online = network.clients.filter((cl) => cl.online);
   const units = [...network.units].sort((a, b) => (a.role === 'master' ? -1 : b.role === 'master' ? 1 : a.name.localeCompare(b.name)));
 
-  let caption: string;
-  if (running) caption = 'Testing the speed…';
-  else if (!last) caption = network.speedtest ? 'No speed test yet' : 'Speed tests come with the next bridge update';
-  else if (last.error) caption = `Last speed test failed ${ago(last.at)}`;
-  else caption = `${online.length} online · ${last.ping_ms ?? '—'} ms ping · tested ${ago(last.at)}`;
-
   return (
-    <Card onPress={() => router.push('/network')} style={styles.card}>
+    <Card onPress={() => router.push(now ? '/traffic' : '/network')} style={styles.card}>
       <View style={styles.row}>
         <Text style={[styles.label, { color: c.text, flex: 1 }]}>Network</Text>
         <View style={[styles.pill, { backgroundColor: c.backgroundSelected }]}>
@@ -46,17 +38,19 @@ function Glance({ network }: { network: Network }) {
       </View>
 
       <View style={[styles.row, { marginTop: 8, alignItems: 'flex-end' }]}>
-        <Text style={[styles.hero, { color: c.text, fontWeight: c.type.hero }]}>{tested ? mbps(last.down_mbps) : String(online.length)}</Text>
-        {tested ? (
+        <Text style={[styles.hero, { color: c.text, fontWeight: c.type.hero }]}>{now ? mbps(now.down) : String(online.length)}</Text>
+        {now ? (
           <View style={{ marginLeft: 6, marginBottom: 7 }}>
             <Text style={[styles.small, { color: c.textSecondary }]}>↓ Mbit/s</Text>
-            <Text style={[styles.upload, { color: c.text }]}>{`↑ ${mbps(last.up_mbps)}`}</Text>
+            <Text style={[styles.upload, { color: c.text }]}>{`↑ ${mbps(now.up)}`}</Text>
           </View>
         ) : (
           <Text style={[styles.upload, { color: c.text, marginBottom: 8, marginLeft: 4 }]}>{`device${online.length === 1 ? '' : 's'} online`}</Text>
         )}
       </View>
-      <Text style={[styles.small, { color: c.textSecondary, marginTop: 2 }]}>{caption}</Text>
+      <Text style={[styles.small, { color: c.textSecondary, marginTop: 2 }]}>
+        {now ? `In use right now · ${online.length} devices online` : 'Traffic comes with the next bridge update'}
+      </Text>
 
       <View style={styles.units}>
         {units.map((u) => {

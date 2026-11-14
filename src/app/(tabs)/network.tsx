@@ -7,6 +7,7 @@
  * longer have a tab of their own.
  */
 
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -15,7 +16,7 @@ import { StatusBanner } from '@/components/status-banner';
 import { TAB_BAR_SPACE } from '@/components/tab-bar';
 import { Text } from '@/components/text';
 import { Body, Button, Card, Chip, Empty, Heading, Icon, Row, Screen, Title, useColors } from '@/components/ui';
-import { ago, clientName, linkLabel, mbps, unpinnedSmartHome, type NetClient, type Network } from '@/lib/network/bridge';
+import { clientName, linkLabel, mbps, unpinnedSmartHome, type NetClient, type Network } from '@/lib/network/bridge';
 import { useNetwork, type NetworkState } from '@/lib/network/store';
 
 type Filter = 'online' | 'smart' | 'all';
@@ -100,9 +101,12 @@ function NetworkView({ network, state }: { network: Network; state: NetworkState
             <Body muted>{`${u.model} · ${u.firmware.split(' ')[0]}`}</Body>
           </Row>
         ))}
+        {network.traffic_now ? (
+          <Row style={{ marginTop: 12 }}>
+            <Button title={`Traffic · ↓ ${mbps(network.traffic_now.down)} ↑ ${mbps(network.traffic_now.up)} Mbit/s`} variant="secondary" icon="chart-line" onPress={() => router.push('/traffic')} />
+          </Row>
+        ) : null}
       </Card>
-
-      {network.speedtest ? <SpeedCard network={network} state={state} /> : null}
 
       <Card style={{ marginTop: 10 }}>
         <Heading style={{ fontSize: 15 }}>Fixed addresses</Heading>
@@ -136,67 +140,6 @@ function NetworkView({ network, state }: { network: Network; state: NetworkState
         </View>
       ))}
       {groups.length === 0 ? <Body muted style={{ marginTop: 14 }}>Nothing to show with this filter.</Body> : null}
-    </View>
-  );
-}
-
-/** The last speed test, a week of downloads as bars, and a button to test now. */
-function SpeedCard({ network, state }: { network: Network; state: NetworkState }) {
-  const c = useColors();
-  const [busy, setBusy] = useState(false);
-  const tests = network.speedtest!;
-  const last = tests.last;
-  const good = tests.history.filter((t) => !t.error && t.down_mbps !== undefined);
-  const top = Math.max(1, ...good.map((t) => t.down_mbps ?? 0));
-  const running = busy || tests.running;
-
-  const run = () => {
-    setBusy(true);
-    state
-      .speedTest()
-      .catch((e: unknown) => Alert.alert('Speed test', e instanceof Error ? e.message : String(e)))
-      .finally(() => setBusy(false));
-  };
-
-  return (
-    <Card style={{ marginTop: 10 }}>
-      <Row between>
-        <Heading style={{ fontSize: 15 }}>Speed</Heading>
-        <Body muted style={{ fontSize: 13 }}>{last ? ago(last.at) : `every ${tests.every_hours} h`}</Body>
-      </Row>
-      {last && !last.error ? (
-        <Row style={{ marginTop: 8, gap: 18 }}>
-          <SpeedFigure label="Down" value={`${mbps(last.down_mbps)}`} unit="Mbit/s" />
-          <SpeedFigure label="Up" value={`${mbps(last.up_mbps)}`} unit="Mbit/s" />
-          <SpeedFigure label="Ping" value={`${last.ping_ms ?? '—'}`} unit="ms" />
-        </Row>
-      ) : (
-        <Body muted style={{ marginTop: 6 }}>{last?.error ? `The last test failed: ${last.error}` : 'No test yet. The bridge runs one from the hub every few hours.'}</Body>
-      )}
-      {good.length > 1 ? (
-        <View style={styles.bars} accessibilityLabel={`Download speeds of the last ${good.length} tests`}>
-          {good.map((t) => (
-            <View key={t.at} style={[styles.bar, { height: `${Math.max(4, ((t.down_mbps ?? 0) / top) * 100)}%`, backgroundColor: t === last ? c.accent : c.backgroundSelected }]} />
-          ))}
-        </View>
-      ) : null}
-      <Body muted style={{ fontSize: 12, marginTop: 8 }}>{'Measured from the hub, so it reads the hub’s own link: good for “is the line as usual?”'}</Body>
-      <Row style={{ marginTop: 10 }}>
-        <Button title={running ? 'Testing…' : 'Test now'} icon="speedometer" variant="secondary" busy={running} onPress={run} />
-      </Row>
-    </Card>
-  );
-}
-
-function SpeedFigure({ label, value, unit }: { label: string; value: string; unit: string }) {
-  const c = useColors();
-  return (
-    <View>
-      <Body muted style={{ fontSize: 12 }}>{label}</Body>
-      <Text style={[styles.figure, { color: c.text }]}>
-        {value}
-        <Text style={[styles.figureUnit, { color: c.textSecondary }]}>{` ${unit}`}</Text>
-      </Text>
     </View>
   );
 }
@@ -330,8 +273,4 @@ const styles = StyleSheet.create({
   section: { marginTop: 18, marginBottom: 8, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.6, opacity: 0.7 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
   name: { fontSize: 15, fontWeight: '600' },
-  figure: { fontSize: 24, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  figureUnit: { fontSize: 12, fontWeight: '600' },
-  bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 3, height: 40, marginTop: 12 },
-  bar: { flex: 1, borderRadius: 2 },
 });

@@ -103,7 +103,7 @@ export const LUCIDE: Record<string, string> = {
   stop: 'square',
   palette: 'palette',
   // network
-  speedometer: 'gauge',
+  'chart-line': 'chart-line',
   wifi: 'wifi',
   'router-wireless': 'router',
   web: 'globe',

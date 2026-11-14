@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { hubToken, selectActiveHub, useHub } from '../hub/store';
-import { fetchNetwork, NetworkUnavailable, reserve, runSpeedTest, unreserve, type Network, type ReserveResult, type SpeedResult } from './bridge';
+import { fetchNetwork, fetchTraffic, NetworkUnavailable, reserve, unreserve, type Network, type ReserveResult, type Traffic } from './bridge';
 
 const POLL_MS = 30_000;
 
@@ -22,8 +22,6 @@ export interface NetworkState {
   refresh(): Promise<void>;
   pin(items: { mac: string; ip: string }[]): Promise<ReserveResult>;
   unpin(mac: string): Promise<void>;
-  /** Run a speed test on the hub and wait for its result. */
-  speedTest(): Promise<SpeedResult>;
 }
 
 export function useNetwork(): NetworkState {
@@ -100,14 +98,44 @@ export function useNetwork(): NetworkState {
     [bridgeUrl, refresh, token],
   );
 
-  const speedTest = useCallback(async () => {
-    if (!bridgeUrl) throw new Error('no bridge');
-    try {
-      return await runSpeedTest(bridgeUrl, await token());
-    } finally {
-      await refresh();
-    }
-  }, [bridgeUrl, refresh, token]);
+  return { network, error, unavailable: missing ?? unavailable, loading: missing ? false : loading, bridgeUrl, refresh, pin, unpin };
+}
 
-  return { network, error, unavailable: missing ?? unavailable, loading: missing ? false : loading, bridgeUrl, refresh, pin, unpin, speedTest };
+/** The traffic history for the stats page: read once, then every minute while it is open. */
+export function useTraffic(): { traffic?: Traffic; error?: string; loading: boolean; refresh(): Promise<void> } {
+  const hub = useHub(selectActiveHub);
+  const history = useHub((s) => s.history);
+  const bridgeUrl = history && /^https?:/.test(history.baseUrl) ? history.baseUrl : undefined;
+  const [traffic, setTraffic] = useState<Traffic>();
+  const [error, setError] = useState<string>();
+  const [loading, setLoading] = useState(true);
+  const live = useRef(true);
+
+  const refresh = useCallback(async () => {
+    try {
+      const token = hub && !hub.demo ? await hubToken(hub.id) : null;
+      if (!bridgeUrl || !token) throw new Error(hub?.demo ? 'The demo home has no network to show.' : 'No ihost-bridge add-on found next to the hub.');
+      const next = await fetchTraffic(bridgeUrl, token);
+      if (!live.current) return;
+      setTraffic(next);
+      setError(undefined);
+    } catch (e) {
+      if (live.current) setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      if (live.current) setLoading(false);
+    }
+  }, [bridgeUrl, hub]);
+
+  useEffect(() => {
+    live.current = true;
+    const first = setTimeout(() => void refresh(), 0);
+    const timer = setInterval(() => void refresh(), 60_000);
+    return () => {
+      live.current = false;
+      clearTimeout(first);
+      clearInterval(timer);
+    };
+  }, [refresh]);
+
+  return { traffic, error, loading, refresh };
 }
